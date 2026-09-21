@@ -7,6 +7,8 @@
 > Projeto didático da disciplina **AI Factory: Build, Deploy and Showcase** — Etapa 1.
 > Mantido por **Gabriel Dias** ([@gabrdias](https://github.com/gabrdias)), a partir do protótipo herdado de Rafael Crispim.
 
+> Testado ao vivo no vídeo de demonstração da Etapa 1, gravado em 21/09/2026.
+
 ## Problema
 
 O produto da FeedbackLoop já analisa bem as perguntas **fechadas** de pesquisas de clima (notas, múltipla escolha). O gargalo é o **texto livre**: clientes de RH recebem centenas a milhares de respostas abertas por pesquisa e não têm como ler tudo — um analista passa dias lendo comentário por comentário, de forma subjetiva e sem escalar. É o maior pedido de feature e o maior gargalo de percepção de valor do produto.
@@ -94,10 +96,6 @@ No GitHub, em **Settings → Environments**, criar dois ambientes:
 | `production` | `main` | Deploy Hook do serviço `feedbackloop-prod` | URL pública do `feedbackloop-prod` |
 
 No Render, em cada um dos dois serviços, configurar `OPENAI_API_KEY` manualmente (Environment → Add Environment Variable) — **com uma chave diferente em cada serviço**.
-
-### Rollback
-
-Testado de verdade em produção, com evidências completas: [post-mortem de 21/09/2026](docs/post-mortem-2026-09-21.md) e [`docs/incidente-2026-09-21/`](docs/incidente-2026-09-21/) (log do erro + print do rollback no Render).
 
 ## Ambientes
 
