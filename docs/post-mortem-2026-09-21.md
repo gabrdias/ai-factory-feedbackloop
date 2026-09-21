@@ -20,6 +20,9 @@ Este documento cobre dois problemas do mesmo dia: um **incidente real**, descobe
 | ~09:50 | Bug reproduzido manualmente em produção: `UnboundLocalError: cannot access local variable 'quantidade_temas'`. Evidência salva em [`docs/incidente-2026-09-21/evidencia-erro-producao.txt`](incidente-2026-09-21/evidencia-erro-producao.txt). |
 | 09:53 | Rollback executado no painel do Render, do deploy do commit `0424cff` de volta para o `cdc9211` (o último deploy saudável). Evidência: [`docs/incidente-2026-09-21/evidencia-rollback-render.png`](incidente-2026-09-21/evidencia-rollback-render.png). |
 | 09:54 | Confirmado em produção: o erro voltou a ser `RateLimitError` (esperado, de billing), não mais `UnboundLocalError` — rollback bem-sucedido. |
+| ~10:15 | Commits seguintes (post-mortem, preparação de release) empurrados para `main` para documentar o incidente. Cada push disparou o CI/CD normalmente. |
+| ~10:30 | **O bug voltou sozinho.** O rollback no Render havia revertido só o *deploy ativo*, não o código em `main` — o commit `0424cff` (com o bug) continuava sendo o HEAD da branch. O primeiro push seguinte fez o CI/CD reimplantar automaticamente esse HEAD, desfazendo o rollback sem ninguém pedir. Reproduzido de novo em produção, confirmado por print do usuário. |
+| ~10:35 | Correção definitiva: um novo commit (`6baf705`) corrige a ordenação do slider **no código**, não só na infraestrutura. Só depois disso o bug fica resolvido de forma duradoura. |
 
 ## Impacto
 
@@ -42,6 +45,7 @@ Durante as janelas acima, qualquer pessoa que clicasse em "Analisar respostas" e
 - **Nenhum smoke test exercitava o caminho real de "clicar em Analisar".** Os três smoke tests desta etapa cobrem: app sobe sem erro, pipeline processa CSV real, URL pública responde. Nenhum cobre "o botão principal do produto funciona de ponta a ponta". Isso deixou passar dois bugs diferentes no mesmo dia.
 - **Dependências transitivas não fixadas são um risco real**, não só teórico — este incidente não foi hipotético, aconteceu de verdade no primeiro deploy.
 - Um teste de regressão (`test_cliente_llm_constroi_sem_erro_de_dependencia`) foi adicionado depois do incidente real, mas **antes** da regressão simulada — e mesmo assim não pegou a regressão do slider, porque testa uma coisa diferente (construção do cliente, não o fluxo do botão). Isso confirma que cobertura de teste precisa ser pensada por *caminho de uso*, não só por função isolada.
+- **Rollback de infraestrutura não é a mesma coisa que corrigir o código.** O rollback no Render reverteu o *deploy ativo*, mas o commit com o bug (`0424cff`) continuou sendo o HEAD de `main`. O próximo push disparou o CI/CD normalmente, que reimplantou esse HEAD — e o bug voltou sozinho, sem ninguém reintroduzi-lo de propósito. Um rollback só é duradouro se for acompanhado (na hora, ou logo em seguida) de um commit que corrige o problema na fonte — senão ele sobrevive só até o próximo deploy automático.
 
 ## Ações de acompanhamento
 
@@ -49,6 +53,7 @@ Durante as janelas acima, qualquer pessoa que clicasse em "Analisar respostas" e
 |---|---|
 | Fixar `httpx==0.27.2` no `requirements.txt` | ✅ Feito (commit `cdc9211`) |
 | Adicionar teste que constrói `ClienteLLM()` sem chamada de rede | ✅ Feito (commit `cdc9211`) |
+| Corrigir a ordenação do slider na fonte (não só via rollback de infra) | ✅ Feito (commit `6baf705`) |
 | Adicionar créditos/billing na conta da OpenAI usada em produção | ⬜ Pendente — ação fora do código, precisa ser feita na conta da OpenAI |
 | Adicionar um smoke test que simule o clique em "Analisar respostas" com um `ClienteLLM` mockado via injeção de dependência | ⬜ Backlog — exige pequeno refactor em `app.py` para permitir injetar o cliente (hoje ele é instanciado direto dentro de `main()`); registrado para a próxima etapa |
 | Revisar o `requirements.txt` por outras dependências transitivas sensíveis não fixadas | ⬜ Backlog |
