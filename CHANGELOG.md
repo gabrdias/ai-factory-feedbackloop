@@ -1,6 +1,6 @@
 # Changelog
 
-## [Não lançado]
+## [v0.3.0] - 2026-09-21
 - Auditoria do protótipo, matriz de decisão de stack, ADR-001 e ADR-002 (`docs/`)
 - Diagramas C4 (níveis 1 e 2) em `docs/architecture/`
 - Smoke tests 1 e 2 offline (`tests/test_smoke.py`) e smoke test 3 de URL pública (`scripts/smoke_test_deploy.py`)
