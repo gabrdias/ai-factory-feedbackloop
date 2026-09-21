@@ -7,6 +7,8 @@
 - Pipeline de CI/CD via GitHub Actions (`.github/workflows/ci-cd.yml`): testes + gitleaks + deploy automático no Render
 - Configuração de deploy (`render.yaml`) com ambientes de desenvolvimento e produção separados
 - README v1: problema, solução, arquitetura, deploy e ambientes
+- fix: `httpx` fixado (incompatibilidade real com o SDK da OpenAI, descoberta em produção) + teste de regressão
+- Rollback testado em produção, com evidências e post-mortem (`docs/post-mortem-2026-09-21.md`)
 
 ## [v0.2]
 - Pipeline movido pro pacote `feedbackloop/` (separação UI x lógica)

@@ -95,6 +95,10 @@ No GitHub, em **Settings → Environments**, criar dois ambientes:
 
 No Render, em cada um dos dois serviços, configurar `OPENAI_API_KEY` manualmente (Environment → Add Environment Variable) — **com uma chave diferente em cada serviço**.
 
+### Rollback
+
+Testado de verdade em produção, com evidências completas: [post-mortem de 21/09/2026](docs/post-mortem-2026-09-21.md) e [`docs/incidente-2026-09-21/`](docs/incidente-2026-09-21/) (log do erro + print do rollback no Render).
+
 ## Ambientes
 
 | | Desenvolvimento | Produção |
