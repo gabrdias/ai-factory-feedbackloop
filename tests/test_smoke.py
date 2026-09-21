@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from streamlit.testing.v1 import AppTest  # noqa: E402
 
 from app import CSV_EXEMPLO, carregar_respostas_do_csv  # noqa: E402
+from feedbackloop.llm import ClienteLLM  # noqa: E402
 from feedbackloop.pipeline import analisar  # noqa: E402
 
 
@@ -64,3 +65,19 @@ def test_pipeline_processa_o_csv_de_exemplo_real():
     assert "Resumo de smoke test" in resultado.resumo
     # 1 chamada de classificação por resposta + 1 chamada de resumo
     assert fake.chamadas == len(respostas) + 1
+
+
+# ---------------------------------------------------------------------------
+# Regressão: incidente real em produção (ver docs/post-mortem-2026-09-21.md).
+# `ClienteLLM()` quebrava com `TypeError: Client.__init__() got an unexpected
+# keyword argument 'proxies'` por causa de uma versão do `httpx` (dependência
+# transitiva do SDK da OpenAI) que não estava fixada no requirements.txt.
+# Nenhum smoke test chegava a construir o cliente de verdade, então isso foi
+# parar em produção sem nenhum teste pegar. Este teste não faz chamada de
+# rede — só garante que o construtor não quebra por incompatibilidade de
+# dependência.
+# ---------------------------------------------------------------------------
+
+def test_cliente_llm_constroi_sem_erro_de_dependencia(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-teste-fake-nao-e-uma-chave-real")
+    ClienteLLM()
