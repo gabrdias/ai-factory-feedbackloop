@@ -25,8 +25,8 @@ Uma aplicação web que recebe respostas abertas em lote (colar texto, subir CSV
 
 | Ambiente | URL | Branch |
 |---|---|---|
-| Produção | _a preencher após o primeiro deploy_ | `main` |
-| Desenvolvimento | _a preencher após o primeiro deploy_ | `develop` |
+| Produção | [feedbackloop-prod-bx3u.onrender.com](https://feedbackloop-prod-bx3u.onrender.com) | `main` |
+| Desenvolvimento | [feedbackloop-dev-6yzb.onrender.com](https://feedbackloop-dev-6yzb.onrender.com) | `develop` |
 
 ## Como rodar localmente
 
