@@ -1,0 +1,40 @@
+# Blueprint do Render — define os dois serviços (dev e prod) do FeedbackLoop.
+# Ver docs/adr/0002-plataforma-de-deploy.md para a justificativa da escolha.
+#
+# autoDeploy é `false` nos dois de propósito: quem dispara o deploy é o
+# workflow do GitHub Actions (.github/workflows/ci-cd.yml), só depois que os
+# testes e o gitleaks passam. Isso evita publicar código que não passou no CI.
+#
+# OPENAI_API_KEY tem `sync: false` nos dois: o valor não fica neste arquivo
+# nem no Git. É configurado manualmente uma vez no dashboard de cada serviço
+# (Environment > Add Environment Variable), com uma chave DIFERENTE em cada
+# ambiente — é isso que torna a separação dev/prod real.
+
+services:
+  - type: web
+    name: feedbackloop-dev
+    env: python
+    plan: free
+    branch: develop
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+  - type: web
+    name: feedbackloop-prod
+    env: python
+    plan: free
+    branch: main
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.12.0

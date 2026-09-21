@@ -1,0 +1,59 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Testes + verificação de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar smoke tests + testes de pipeline (offline, sem chamar a API real)
+        run: pytest -q
+
+      - name: Verificar segredos vazados no histórico (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy (${{ github.ref_name }})
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Disparar deploy no Render
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "RENDER_DEPLOY_HOOK não configurado neste ambiente do GitHub. Veja o README, seção 'Deploy e CI/CD'."
+            exit 1
+          fi
+          curl -sSf -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      - name: Aguardar o serviço subir no Render
+        run: sleep 60
+
+      - name: Smoke test 3 — checar se a URL pública está respondendo
+        run: python scripts/smoke_test_deploy.py "${{ vars.APP_URL }}"
