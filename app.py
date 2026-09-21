@@ -77,6 +77,7 @@ def main():
             st.write(respostas)
 
     st.markdown("### 2) Análise")
+    quantidade_temas = st.slider("Quantidade de temas no resumo", 3, 15, 8)
 
     if st.button("Analisar respostas", type="primary", disabled=not respostas):
         # cria o cliente real só na hora de rodar (precisa da OPENAI_API_KEY)
@@ -104,8 +105,6 @@ def main():
             "Obs.: este resultado não é salvo em lugar nenhum. "
             "Baixe se precisar (em breve... talvez)."
         )
-
-    quantidade_temas = st.slider("Quantidade de temas no resumo", 3, 15, 8)
 
 
 if __name__ == "__main__":
