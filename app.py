@@ -87,7 +87,7 @@ def main():
 
         with st.spinner("Classificando resposta por resposta e montando o resumo..."):
             # sem cache: toda vez que clicar, paga tudo de novo. (planted)
-            resultado = analisar(cliente, respostas)
+            resultado = analisar(cliente, respostas, top_n=quantidade_temas)
 
         st.markdown("### 3) Resultado")
         st.markdown(resultado.resumo)
@@ -103,6 +103,8 @@ def main():
             "Obs.: este resultado não é salvo em lugar nenhum. "
             "Baixe se precisar (em breve... talvez)."
         )
+
+    quantidade_temas = st.slider("Quantidade de temas no resumo", 3, 15, 8)
 
 
 if __name__ == "__main__":
