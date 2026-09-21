@@ -1,89 +1,134 @@
 # FeedbackLoop — Survey Insights
 
-Oi! Aqui é o Rafael. Esse é o app que a gente usa pra analisar as **respostas
-abertas** das pesquisas de clima — aquelas perguntas de texto livre tipo "o que
-você mudaria na empresa?". O RH colava tudo numa planilha e lia uma por uma na
-mão. Doía. Esse protótipo faz o trabalho pesado:
+![CI/CD](https://github.com/gabrdias/ai-factory-feedbackloop/actions/workflows/ci-cd.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 
-1. **agrupa por tema** (carga de trabalho, liderança, salário, etc.)
-2. **marca o sentimento** de cada resposta (positivo / neutro / negativo)
-3. **gera um resumo executivo** com os principais temas + ações recomendadas
+> Projeto didático da disciplina **AI Factory: Build, Deploy and Showcase** — Etapa 1.
+> Mantido por **Gabriel Dias** ([@gabrdias](https://github.com/gabrdias)), a partir do protótipo herdado de Rafael Crispim.
 
-É análise **em lote**, não é chatbot. Você joga 40 respostas, ele cospe um
-relatório. Só isso.
+## Problema
 
-## Como rodar
+O produto da FeedbackLoop já analisa bem as perguntas **fechadas** de pesquisas de clima (notas, múltipla escolha). O gargalo é o **texto livre**: clientes de RH recebem centenas a milhares de respostas abertas por pesquisa e não têm como ler tudo — um analista passa dias lendo comentário por comentário, de forma subjetiva e sem escalar. É o maior pedido de feature e o maior gargalo de percepção de valor do produto.
 
-1. Clona o repo
-2. Instala as deps: `pip install -r requirements.txt` (tem streamlit, openai,
-   pandas, python-dotenv e pytest)
-3. Cria um `.env` com a chave da OpenAI (copia do `.env.example`)
-4. `streamlit run app.py`
-5. Abre no browser, escolhe "Usar dados de exemplo" e clica em **Analisar**.
+## Solução
 
-Pra rodar os testes (esses **não** chamam a API, pode rodar à vontade):
+Uma aplicação web que recebe respostas abertas em lote (colar texto, subir CSV ou usar dados de exemplo) e devolve:
 
+1. **Agrupamento por tema** (carga de trabalho, liderança, salário etc.)
+2. **Classificação de sentimento** por resposta (positivo / neutro / negativo)
+3. **Resumo executivo** com os principais temas e ações recomendadas
+
+É análise em lote, não é chatbot: entram N respostas, sai um relatório.
+
+## URL pública
+
+| Ambiente | URL | Branch |
+|---|---|---|
+| Produção | _a preencher após o primeiro deploy_ | `main` |
+| Desenvolvimento | _a preencher após o primeiro deploy_ | `develop` |
+
+## Como rodar localmente
+
+```bash
+git clone https://github.com/gabrdias/ai-factory-feedbackloop.git
+cd ai-factory-feedbackloop
+pip install -r requirements.txt
+cp .env.example .env   # preencha OPENAI_API_KEY
+streamlit run app.py
 ```
+
+Abra no navegador, escolha **"Usar dados de exemplo"** e clique em **Analisar**.
+
+Rodar os testes (todos offline, não chamam a API real):
+
+```bash
 pytest -q
 ```
 
-## Como o código tá organizado
+## Arquitetura
 
-- `app.py` — só a UI do Streamlit (entrada de dados + exibição)
-- `feedbackloop/llm.py` — interface fina com o LLM. É **mockável** de propósito:
-  o resto do código só conhece o método `.completar()`. Nos testes a gente passa
-  um cliente fake.
-- `feedbackloop/pipeline.py` — o coração: classificação, agregação e resumo.
-  Separei as funções puras (parse/contagem/resumo) das que chamam o LLM.
-- `data/` — 36 respostas sintéticas de exemplo. **Leia o
-  `data/AVISO-DADOS-SINTETICOS.md`.**
-- `tests/` — pytest, tudo offline.
+- `app.py` — só a UI do Streamlit (entrada de dados + exibição).
+- `feedbackloop/llm.py` — interface fina com o LLM (`ClienteLLM.completar`), mockável de propósito.
+- `feedbackloop/pipeline.py` — o núcleo: classificação, agregação e resumo. Funções puras separadas das que chamam o LLM.
+- `data/` — 36 respostas sintéticas de exemplo (ver `data/AVISO-DADOS-SINTETICOS.md`).
+- `tests/` — smoke tests e testes de pipeline, todos offline com LLM mockado.
 
-## Sobre os dados
+Diagramas C4 (contexto e contêineres): [`docs/architecture/`](docs/architecture/).
 
-Os exemplos em `data/respostas-pesquisa-exemplo.csv` são **inventados**. Botei
-**nomes fake de gente** no meio de algumas respostas DE PROPÓSITO (tipo "o
-gerente Marcos Antunes muda tudo toda semana"), porque é o que acontece de
-verdade numa pesquisa — e porque vocês vão precisar lidar com isso (ver dívida
-técnica de LGPD lá embaixo).
+## Decisões de arquitetura
 
-## Observações
+| Documento | Conteúdo |
+|---|---|
+| [Auditoria do protótipo](docs/auditoria-prototipo.md) | Lacunas identificadas no código herdado, por categoria e risco |
+| [Matriz de decisão de stack](docs/decisao-stack.md) | Comparação dos 8 protótipos disponíveis, critérios e pesos |
+| [ADR-001](docs/adr/0001-escolha-do-prototipo-e-stack.md) | Escolha do FeedbackLoop e alternativas descartadas |
+| [ADR-002](docs/adr/0002-plataforma-de-deploy.md) | Escolha do Render como plataforma de deploy |
 
-- Usei um modelo GPT pequeno da OpenAI porque é barato. Dá pra trocar pro Claude
-  (um modelo Haiku da Anthropic, pequeno e rápido) — deixei o esqueleto comentado no `feedbackloop/llm.py`.
-- O modelo tá **hardcoded** no código. Tem uma linha no `.env.example` pra isso
-  mas ela ainda não faz nada (me julguem).
-- Anotações mais cruas minhas tão em `docs/notas-rafael.md`.
+## Testes e qualidade
 
-## Dívida técnica herdada
+Três smoke tests, cobrindo desde a lógica até a URL pública em produção:
 
-Não joga fora, **refatora**. Eu sei que tem buraco. Tá tudo aqui, de propósito,
-documentado pra vocês atacarem:
+1. **`tests/test_smoke.py::test_app_streamlit_sobe_sem_erro`** — a aplicação Streamlit sobe de ponta a ponta sem lançar exceção (usa `streamlit.testing.v1.AppTest`).
+2. **`tests/test_smoke.py::test_pipeline_processa_o_csv_de_exemplo_real`** — o pipeline completo processa o CSV de exemplo real do repositório, com LLM mockado.
+3. **`scripts/smoke_test_deploy.py`** — depois do deploy, faz um HTTP GET no endpoint de saúde do Streamlit (`/_stcore/health`) da URL pública e confirma resposta `200`. Roda automaticamente no workflow de deploy, não no `pytest -q` local.
 
-1. **LGPD — nomes não anonimizados.** As respostas vão **cruas** pro provedor de
-   IA, com nomes de pessoas e queixas identificáveis dentro. Não tem NER, não tem
-   regex, não tem nada. O app só mostra um aviso amarelo (que ninguém lê). Isso
-   precisa de anonimização ANTES do prompt. Falar com a Bia e com jurídico.
-2. **Sem persistência.** Fechou a aba, perdeu a análise. Nada é salvo — nem o
-   resultado, nem histórico. Não dá pra comparar a pesquisa deste trimestre com
-   a do anterior.
-3. **Sem cache — reanalisa tudo toda vez (= custo).** Cada clique em "Analisar"
-   refaz 1 chamada de LLM por resposta + 1 do resumo. Mesma planilha clicada
-   duas vezes = paga duas vezes. Não tem memoização nem hash do input.
-4. **Sem deploy / sem CI.** Roda só na máquina local. Não tem pipeline, não tem
-   Docker, não tem GitHub Actions rodando os testes.
-5. **Sem observabilidade.** Nenhum log, nenhuma métrica, nenhum rastro de quanto
-   custou cada análise ou quanto tempo levou. Quando der ruim, boa sorte
-   descobrindo o porquê.
-6. **Qualidade do resumo não é avaliada.** Não tem conjunto de validação, nem
-   rubrica, nem teste de regressão de prompt. A gente não sabe se o resumo está
-   bom — só "pareceu ok na tela". O modelo também tende a inventar tema novo pra
-   cada resposta, pulverizando a agregação (sem taxonomia fixa).
+`tests/test_pipeline.py` cobre a lógica de negócio em mais detalhe (parsing, agregação, casos de borda).
 
-(Os testes em `tests/` cobrem a **lógica** — parsing, contagem, montagem do
-resumo e o fluxo ponta a ponta com LLM mockado. Eles **não** avaliam a
-qualidade do conteúdo gerado pelo modelo. Isso é o item 6.)
+## Deploy e CI/CD
 
-Qualquer dúvida, a Bia tem meu contato.
+Pipeline em [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml), com dois jobs:
 
-— Rafael (início deste ano)
+1. **`test`** (toda branch e PR para `main`): instala dependências, roda `pytest -q` e verifica segredos vazados com [gitleaks](https://github.com/gitleaks/gitleaks).
+2. **`deploy`** (só em push para `main` ou `develop`, e só se `test` passar): dispara o deploy no Render via *deploy hook*, aguarda o serviço subir e roda o smoke test 3 contra a URL pública.
+
+A plataforma de hospedagem é o [Render](https://render.com) (ver [ADR-002](docs/adr/0002-plataforma-de-deploy.md)), configurada via [`render.yaml`](render.yaml): dois Web Services (`feedbackloop-dev` e `feedbackloop-prod`), cada um com `autoDeploy: false` — o deploy só acontece pelo GitHub Actions, nunca direto do push, para garantir que só vai pro ar o que passou no CI.
+
+### Configuração necessária (uma vez, feita manualmente)
+
+No GitHub, em **Settings → Environments**, criar dois ambientes:
+
+| Ambiente do GitHub | Branch | Secret `RENDER_DEPLOY_HOOK` | Variável `APP_URL` |
+|---|---|---|---|
+| `development` | `develop` | Deploy Hook do serviço `feedbackloop-dev` (Render → Settings → Deploy Hook) | URL pública do `feedbackloop-dev` |
+| `production` | `main` | Deploy Hook do serviço `feedbackloop-prod` | URL pública do `feedbackloop-prod` |
+
+No Render, em cada um dos dois serviços, configurar `OPENAI_API_KEY` manualmente (Environment → Add Environment Variable) — **com uma chave diferente em cada serviço**.
+
+## Ambientes
+
+| | Desenvolvimento | Produção |
+|---|---|---|
+| Branch | `develop` | `main` |
+| Serviço no Render | `feedbackloop-dev` | `feedbackloop-prod` |
+| Segredo `OPENAI_API_KEY` | Próprio, configurado no serviço `feedbackloop-dev` | Próprio, configurado no serviço `feedbackloop-prod` |
+| Quem aciona o deploy | Push em `develop` (via GitHub Actions) | Push em `main` (via GitHub Actions) |
+
+## Segurança e segredos
+
+- Nenhum segredo é commitado: `.env` está no `.gitignore`, e `.env.example` traz só um placeholder.
+- Toda chave usada localmente pelo autor anterior do protótipo foi tratada como comprometida e **rotacionada** antes deste repositório se tornar público.
+- O histórico completo do Git foi verificado com [`gitleaks`](https://github.com/gitleaks/gitleaks) antes da publicação, e o mesmo scanner roda em todo push via GitHub Actions.
+
+## Dívida técnica conhecida
+
+Herdada do protótipo e **ainda não resolvida nesta etapa** — mitigação técnica planejada para a Semana 6 do roteiro do time (ver `BRIEFING.md`):
+
+- Respostas vão **sem anonimização** para o provedor de LLM (LGPD — ver aviso no próprio app).
+- Sem cache: reprocessa tudo a cada análise (custo linear com o uso).
+- Sem persistência: fechar a aba perde o resultado.
+- Sem taxonomia fixa de temas nem avaliação automatizada de qualidade do resumo.
+
+Detalhe completo, com risco priorizado: [`docs/auditoria-prototipo.md`](docs/auditoria-prototipo.md).
+
+## Versionamento
+
+Conventional commits (`feat:`, `fix:`, `docs:` etc.) desde a adoção do projeto. Releases seguem [SemVer](https://semver.org/lang/pt-BR/) e ficam documentadas em [`CHANGELOG.md`](CHANGELOG.md) e nas [GitHub Releases](https://github.com/gabrdias/ai-factory-feedbackloop/releases) do repositório.
+
+## Origem do projeto
+
+Este projeto nasceu como protótipo de Rafael Crispim, Data Analyst da FeedbackLoop Tecnologia (empresa fictícia, material didático), que demonstrou a ideia a dois clientes-piloto e depois saiu da empresa. Notas técnicas originais dele seguem preservadas em [`docs/notas-rafael.md`](docs/notas-rafael.md) por transparência e contexto histórico.
+
+## Licença
+
+[MIT](LICENSE)

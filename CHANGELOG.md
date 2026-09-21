@@ -1,5 +1,13 @@
 # Changelog
 
+## [Não lançado]
+- Auditoria do protótipo, matriz de decisão de stack, ADR-001 e ADR-002 (`docs/`)
+- Diagramas C4 (níveis 1 e 2) em `docs/architecture/`
+- Smoke tests 1 e 2 offline (`tests/test_smoke.py`) e smoke test 3 de URL pública (`scripts/smoke_test_deploy.py`)
+- Pipeline de CI/CD via GitHub Actions (`.github/workflows/ci-cd.yml`): testes + gitleaks + deploy automático no Render
+- Configuração de deploy (`render.yaml`) com ambientes de desenvolvimento e produção separados
+- README v1: problema, solução, arquitetura, deploy e ambientes
+
 ## [v0.2]
 - Pipeline movido pro pacote `feedbackloop/` (separação UI x lógica)
 - Interface de LLM mockável (`feedbackloop/llm.py`) + testes offline em `tests/`
