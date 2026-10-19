@@ -1,39 +1,70 @@
 # C4 — Nível 2: Diagrama de Contêineres
 
-Abre o sistema FeedbackLoop (a caixa azul do Nível 1) e mostra as partes que o compõem — no nosso caso, deliberadamente poucas: é um monólito de um único processo.
+Abre o sistema FeedbackLoop (a caixa azul do Nível 1). Continua sendo um monólito de um único processo; a Etapa 2 acrescentou **componentes dentro do processo** e **um armazenamento local** (o cache). *Atualizado na v1.0.*
 
 ```mermaid
 flowchart TD
     Analista["👤 Analista de RH<br/><i>Pessoa</i>"]
 
-    subgraph Boundary["Fronteira do sistema: FeedbackLoop — Survey Insights"]
-        WebApp["🖥️ Web App<br/><i>Contêiner: Python 3 + Streamlit</i><br/>Processo único que recebe as respostas,<br/>orquestra classificação/agregação/resumo<br/>(feedbackloop/pipeline.py) e renderiza a UI.<br/>Sem backend/API separada."]
-        CSV[("📄 Dados de exemplo<br/><i>Contêiner: arquivo CSV estático<br/>no próprio repositório</i><br/>36 respostas sintéticas para demonstração")]
+    subgraph Boundary["Fronteira do sistema: FeedbackLoop — Survey Insights (Web Service no Render)"]
+        WebApp["🖥️ Web App<br/><i>Contêiner: Python 3.12 + Streamlit</i><br/>app.py: UI, prévia de privacidade, controles"]
+        Pipeline["⚙️ Pipeline<br/><i>feedbackloop/pipeline.py</i><br/>classifica em paralelo (8 threads),<br/>agrega e gera o resumo"]
+        PII["🛡️ Sanitização de PII<br/><i>feedbackloop/pii.py</i><br/>mascara antes de qualquer envio;<br/>trava final (fail-closed)"]
+        LLM["🔌 Cliente do LLM<br/><i>feedbackloop/llm.py</i><br/>timeout, retry, custo e erros por chamada"]
+        Obs["📡 Observabilidade<br/><i>feedbackloop/observabilidade.py</i><br/>spans, métricas e log JSON, sem dado pessoal"]
+        Cache[("🗄️ Cache de classificações<br/><i>SQLite em disco efêmero</i><br/>hash do texto mascarado → tema, sentimento<br/>TTL 30 dias, purga horária")]
+        CSV[("📄 Dados de exemplo<br/><i>CSV estático</i><br/>36 respostas sintéticas")]
     end
 
-    OpenAI["🤖 OpenAI API<br/><i>Sistema Externo</i><br/>Chat Completions (modelo GPT pequeno)"]
+    OpenAI["🤖 OpenAI API<br/><i>Sistema Externo (EUA)</i>"]
+    Grafana["📈 Grafana Cloud<br/><i>Sistema Externo (São Paulo)</i><br/>Mimir, Tempo, dashboard, alertas"]
 
-    Analista -- "Acessa via navegador<br/>[HTTPS]" --> WebApp
-    WebApp -- "Lê (apenas quando a fonte<br/>'dados de exemplo' é escolhida)" --> CSV
-    WebApp -- "Classifica cada resposta e gera<br/>o resumo executivo<br/>[HTTPS / REST]" --> OpenAI
+    Analista -- "Navegador [HTTPS]" --> WebApp
+    WebApp -- "Lê (fonte 'dados de exemplo')" --> CSV
+    WebApp --> Pipeline
+    Pipeline --> PII
+    Pipeline -- "consulta antes de chamar" --> Cache
+    Pipeline --> LLM
+    LLM -- "texto MASCARADO<br/>[HTTPS / REST]" --> OpenAI
+    Pipeline -. "eventos" .-> Obs
+    LLM -. "eventos" .-> Obs
+    Obs -- "traces e métricas<br/>[OTLP / HTTPS]" --> Grafana
 
     style WebApp fill:#1168bd,color:#ffffff,stroke:#0b4884
+    style Pipeline fill:#1168bd,color:#ffffff,stroke:#0b4884
+    style PII fill:#1168bd,color:#ffffff,stroke:#0b4884
+    style LLM fill:#1168bd,color:#ffffff,stroke:#0b4884
+    style Obs fill:#1168bd,color:#ffffff,stroke:#0b4884
     style OpenAI fill:#999999,color:#ffffff,stroke:#6b6b6b
+    style Grafana fill:#999999,color:#ffffff,stroke:#6b6b6b
     style Analista fill:#08427b,color:#ffffff,stroke:#052c52
+    style Cache fill:#438dd5,color:#ffffff,stroke:#2c6aa8
     style CSV fill:#438dd5,color:#ffffff,stroke:#2c6aa8
 ```
 
+> Em rigor de C4, Web App, Pipeline, PII, Cliente do LLM e Observabilidade são **componentes** (nível 3) do mesmo contêiner (um processo Python). Estão desenhados aqui, separados, porque é onde as fronteiras de **dados** passam: o que sai do processo e o que é gravado em disco.
+
 ## Elementos
 
-| Contêiner | Tecnologia | Responsabilidade |
+| Elemento | Tecnologia | Responsabilidade e limite de dados |
 |---|---|---|
-| Web App | Python 3, Streamlit, `pandas` | Único deployable do sistema. Contém a UI (`app.py`) e a lógica de negócio (`feedbackloop/pipeline.py`, `feedbackloop/llm.py`) no mesmo processo. Hospedado como Web Service no Render (ver [ADR-002](../adr/0002-plataforma-de-deploy.md)). |
-| Dados de exemplo | CSV versionado em Git | Não é um banco de dados: é um arquivo estático embutido no próprio contêiner de deploy, usado só para demonstração. Não guarda nenhum resultado gerado pelo usuário. |
+| Web App | Python 3.12, Streamlit, `pandas` | Único deployable. Hospedado no Render ([ADR-002](../adr/0002-plataforma-de-deploy.md)). **Recebe o texto original** das respostas e o mantém só em memória, durante a sessão. |
+| Sanitização de PII | Regras + léxico + pistas de contexto ([ADR-004](../adr/0004-sanitizacao-de-pii-por-regras.md)) | Troca nomes, e-mails, telefones, CPF etc. por marcadores (`[PESSOA_1]`). A **trava final** impede qualquer chamada se restar PII reconhecível. Recall medido: 100% nas categorias cobertas, 87,5% no total. |
+| Pipeline | Python, `ThreadPoolExecutor` | Classificação em paralelo ([ADR-005](../adr/0005-otimizacao-concorrencia-e-cache.md)); o resumo recebe só agregados. |
+| Cliente do LLM | SDK OpenAI 1.50 | Cada chamada gera span e métricas (tokens, custo, erro). A chave vem de variável de ambiente, uma por ambiente. |
+| Observabilidade | OpenTelemetry SDK ([ADR-003](../adr/0003-observabilidade-opentelemetry-grafana-cloud.md)) | Exporta telemetria; **nunca** texto de resposta, nome ou token. |
+| Cache de classificações | SQLite, arquivo local | Guarda `sha256(versão do prompt, modelo, texto mascarado)` → `{tema, sentimento}`. **Não guarda o texto.** TTL de 30 dias (teto 90), purga na subida e a cada hora, botão "Excluir cache agora" ([política de retenção](../lgpd/politica-de-retencao-e-exclusao.md)). O disco do Render gratuito é efêmero: o cache some a cada deploy. |
+| Dados de exemplo | CSV versionado em Git | Estático e sintético. Não guarda resultado de ninguém. |
 
-## Por que não há mais contêineres
+## Fronteiras de dados (o que atravessa cada seta)
 
-Não existe API separada, banco de dados, cache (Redis) ou fila nesta versão — e o diagrama não inventa nenhum para "parecer mais robusto". Streamlit acopla UI e lógica no mesmo processo por design; separar isso em contêineres distintos (ex.: API FastAPI + frontend) seria reescrever a arquitetura, o que contraria a regra da disciplina de evoluir o protótipo herdado. Se a Semana 9 do roadmap (persistência das análises) avançar, este diagrama ganha um novo contêiner de banco de dados e uma nova ADR — não antes disso.
+| Seta | Conteúdo | Tem dado pessoal? |
+|---|---|---|
+| Analista → Web App | Texto original das respostas | **Sim** (pode conter nomes de terceiros) |
+| Pipeline → OpenAI | Texto **mascarado** + instruções | Residual possível (lacunas medidas) |
+| Web App → Grafana | Contagens, durações, tokens, custo, rótulos | Não (testado) |
+| Pipeline → Cache | Hash + tema + sentimento | Não guarda texto; tratado como dado derivado |
 
-## Mapeamento para o C4 Nível 1
+## Por que continua sendo um monólito
 
-A caixa "FeedbackLoop — Survey Insights" do [diagrama de contexto](c4-nivel1-contexto.md) corresponde exatamente ao contêiner "Web App" aqui — não há nenhuma parte do sistema que fique de fora da fronteira nos dois níveis.
+Não existe API separada, banco de dados de aplicação, Redis nem fila. O cache em SQLite é um **arquivo local do mesmo processo**, escolhido para não criar um novo serviço, uma nova conta e uma nova superfície de LGPD (comparação no [ADR-005](../adr/0005-otimizacao-concorrencia-e-cache.md)). Se houver persistência de análises, este diagrama ganha um banco e uma nova ADR, não antes disso.

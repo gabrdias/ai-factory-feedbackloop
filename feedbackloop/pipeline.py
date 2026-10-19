@@ -10,10 +10,23 @@
 # que chamam o LLM (classificar_resposta, gerar_resumo, analisar). As puras dá
 # pra testar offline sem mockar nada; as outras a gente mocka o cliente.
 
+import contextvars
 import json
 import re
+import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+
+from opentelemetry.trace import Status, StatusCode
+
+from . import observabilidade as obs
+from .pii import PIIDetectadaError, sanitizar, sanitizar_lote
+
+# Mude quando mudar o prompt de classificação: entra na chave do cache, para não
+# servir classificações feitas com um prompt antigo.
+VERSAO_PROMPT = "classificacao-v1"
+NAO_CLASSIFICADO = "Não classificado"
 
 # Os três rótulos de sentimento que a gente aceita. Qualquer coisa fora disso
 # o parser joga pra "neutro" (decisão preguiçosa, mas evita quebrar o pipeline).
@@ -151,18 +164,31 @@ def montar_resumo(
 # Funções que CHAMAM o LLM (recebem um cliente com .completar(system, user))
 # ---------------------------------------------------------------------------
 
-def classificar_resposta(cliente, resposta: str) -> dict:
-    """Classifica UMA resposta: devolve {"tema", "sentimento"}.
+class AnaliseFalhouError(RuntimeError):
+    """Todas as chamadas ao provedor falharam; não há resultado útil para mostrar."""
 
-    ATENÇÃO LGPD: a `resposta` vai crua pro prompt, podendo conter nomes de
-    pessoas e queixas identificáveis. Não tem anonimização aqui. (planted)
-    """
+    def __init__(self, tipo_erro: str):
+        super().__init__(f"Todas as chamadas ao provedor de IA falharam ({tipo_erro}).")
+        self.tipo_erro = tipo_erro
+
+
+def _pedir_classificacao(cliente, texto_sanitizado: str) -> dict:
     bruto = cliente.completar(
         system=SYSTEM_CLASSIFICACAO,
-        user=f"Resposta da pesquisa:\n\"\"\"\n{resposta}\n\"\"\"",
+        user=f"Resposta da pesquisa:\n\"\"\"\n{texto_sanitizado}\n\"\"\"",
         temperatura=0.0,
     )
     return parse_classificacao(bruto)
+
+
+def classificar_resposta(cliente, resposta: str, *, sanitizar_pii: bool = True) -> dict:
+    """Classifica UMA resposta: devolve {"tema", "sentimento"}.
+
+    LGPD: a resposta é sanitizada (nomes, CPF, e-mail, telefone...) ANTES de ir para o
+    prompt. Além disso, o ClienteLLM real bloqueia o envio se ainda restar PII.
+    """
+    texto = sanitizar(resposta).texto if sanitizar_pii else resposta
+    return _pedir_classificacao(cliente, texto)
 
 
 def gerar_resumo_llm(
@@ -170,15 +196,23 @@ def gerar_resumo_llm(
     top_temas: list[tuple[str, int]],
     contagem_sentimentos: dict,
 ) -> str:
-    """Pede pro LLM o texto qualitativo (leitura + ações)."""
-    temas_fmt = "\n".join(f"- {t}: {q}" for t, q in top_temas) or "- (nenhum)"
+    """Pede pro LLM o texto qualitativo (leitura + ações).
+
+    Só recebe AGREGADOS (temas com contagem e distribuição de sentimento), nunca o texto
+    das respostas. Os nomes de tema também passam pela sanitização, por precaução.
+    """
+    temas_fmt = "\n".join(f"- {sanitizar(t).texto}: {q}" for t, q in top_temas) or "- (nenhum)"
     sent_fmt = ", ".join(f"{k}={v}" for k, v in contagem_sentimentos.items())
     user = (
         f"Principais temas (tema: contagem):\n{temas_fmt}\n\n"
         f"Distribuição de sentimento: {sent_fmt}\n\n"
         "Gere o resumo executivo e as ações recomendadas."
     )
-    return cliente.completar(system=SYSTEM_RESUMO, user=user, temperatura=0.3)
+    token = obs.operacao_corrente.set("resumo")
+    try:
+        return cliente.completar(system=SYSTEM_RESUMO, user=user, temperatura=0.3)
+    finally:
+        obs.operacao_corrente.reset(token)
 
 
 @dataclass
@@ -188,36 +222,185 @@ class ResultadoAnalise:
     top_temas: list[tuple[str, int]] = field(default_factory=list)
     contagem_sentimentos: dict = field(default_factory=dict)
     resumo: str = ""
+    avisos: list[str] = field(default_factory=list)
+    metricas: dict = field(default_factory=dict)
 
 
-def analisar(cliente, respostas: list[str], top_n: int = 8) -> ResultadoAnalise:
+def _classificar_uma(cliente, texto: str, cache, modelo: str) -> dict:
+    """Classifica uma resposta já sanitizada. Nunca levanta: erro vira 'Não classificado'."""
+    with obs.tracer().start_as_current_span("classificar.resposta") as span:
+        chave = None
+        if cache is not None:
+            chave = cache.chave(texto, modelo, VERSAO_PROMPT)
+            achado = cache.obter(chave)
+            if achado is not None:
+                obs.inst().cache_consultas.add(1, obs.attrs(resultado="hit"))
+                span.set_attribute("feedbackloop.cache", "hit")
+                return {**achado, "origem": "cache"}
+            obs.inst().cache_consultas.add(1, obs.attrs(resultado="miss"))
+            span.set_attribute("feedbackloop.cache", "miss")
+        try:
+            dado = _pedir_classificacao(cliente, texto)
+        except PIIDetectadaError:
+            span.set_attribute("feedbackloop.erro", "pii_bloqueada")
+            return {"tema": NAO_CLASSIFICADO, "sentimento": "neutro", "origem": "erro", "erro": "pii_bloqueada"}
+        except Exception as exc:  # erro do provedor: degrada só esta resposta
+            span.record_exception(exc)
+            span.set_status(Status(StatusCode.ERROR, type(exc).__name__))
+            return {"tema": NAO_CLASSIFICADO, "sentimento": "neutro", "origem": "erro", "erro": type(exc).__name__}
+        if chave is not None and dado["tema"] != NAO_CLASSIFICADO:
+            cache.guardar(chave, dado["tema"], dado["sentimento"])
+        return {**dado, "origem": "llm"}
+
+
+def _executar(funcao, itens: list, max_workers: int) -> list:
+    """Aplica `funcao` a cada item, preservando a ordem. Com workers > 1 usa threads."""
+    if max_workers <= 1 or len(itens) <= 1:
+        return [funcao(item) for item in itens]
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(itens)), thread_name_prefix="classif") as pool:
+        # copy_context leva para a thread o span pai (OpenTelemetry) e o acumulador de consumo.
+        futuros = [pool.submit(contextvars.copy_context().run, funcao, item) for item in itens]
+        return [f.result() for f in futuros]
+
+
+def analisar(
+    cliente,
+    respostas: list[str],
+    top_n: int = 8,
+    *,
+    max_workers: int = 1,
+    cache=None,
+    modelo: str = "",
+    sanitizar_pii: bool = True,
+) -> ResultadoAnalise:
     """Pipeline ponta a ponta.
 
-    Recebe a lista de respostas abertas e um `cliente` com método
-    `.completar(system, user, temperatura)`. Nos testes esse cliente é um mock.
-
-    NOTA DE CUSTO (planted): isto faz 1 chamada de LLM POR RESPOSTA + 1 do
-    resumo, toda vez que roda. Sem cache, sem batch real. 40 respostas = 41
-    chamadas. Reanalisar a mesma planilha duas vezes paga duas vezes.
+    `cliente` tem o método `.completar(system, user, temperatura)` (nos testes, um mock).
+    Os parâmetros opcionais controlam as otimizações da Etapa 2; os padrões
+    (`max_workers=1`, `cache=None`) reproduzem o comportamento sequencial original,
+    que é o "antes" das medições em docs/otimizacao/.
     """
-    respostas_limpas = [r.strip() for r in respostas if r and r.strip()]
+    inicio = time.perf_counter()
+    uso = obs.UsoAnalise()
+    token_uso = obs.uso_corrente.set(uso)
+    try:
+        respostas_limpas = [r.strip() for r in respostas if r and r.strip()]
+        with obs.tracer().start_as_current_span("analise") as raiz:
+            raiz.set_attribute("feedbackloop.respostas", len(respostas_limpas))
+            raiz.set_attribute("feedbackloop.workers", max_workers)
+            raiz.set_attribute("feedbackloop.cache_habilitado", cache is not None)
+            raiz.set_attribute("feedbackloop.modelo", modelo)
+            try:
+                resultado = _analisar(
+                    cliente, respostas_limpas, top_n, max_workers, cache, modelo, sanitizar_pii, uso, inicio
+                )
+            except AnaliseFalhouError as exc:
+                raiz.set_status(Status(StatusCode.ERROR, exc.tipo_erro))
+                _registrar_metricas_da_analise(
+                    "erro", time.perf_counter() - inicio, len(respostas_limpas), 0, 0.0, Counter(),
+                    max_workers, cache is not None,
+                )
+                raise
+            raiz.set_attribute("feedbackloop.resultado", "parcial" if resultado.avisos else "ok")
+            return resultado
+    finally:
+        obs.uso_corrente.reset(token_uso)
 
-    classificacoes = []
-    for resp in respostas_limpas:
-        c = classificar_resposta(cliente, resp)
-        c["resposta"] = resp
-        classificacoes.append(c)
+
+def _analisar(cliente, respostas_limpas, top_n, max_workers, cache, modelo, sanitizar_pii, uso, inicio):
+    tracer = obs.tracer()
+    total = len(respostas_limpas)
+
+    with tracer.start_as_current_span("pii.sanitizar") as span:
+        if sanitizar_pii:
+            sanitizadas, entidades = sanitizar_lote(respostas_limpas)
+        else:
+            sanitizadas, entidades = list(respostas_limpas), Counter()
+        span.set_attribute("pii.entidades_total", sum(entidades.values()))
+        for tipo, qtd in entidades.items():
+            span.set_attribute(f"pii.entidades.{tipo.lower()}", qtd)
+
+    with tracer.start_as_current_span("classificar.lote") as span:
+        span.set_attribute("feedbackloop.workers", max_workers)
+        resultados = _executar(lambda t: _classificar_uma(cliente, t, cache, modelo), sanitizadas, max_workers)
+        classificacoes = [{**r, "resposta": texto} for r, texto in zip(resultados, sanitizadas)]
+        hits = sum(1 for c in classificacoes if c["origem"] == "cache")
+        erros_provedor = [c["erro"] for c in classificacoes if c.get("erro") and c["erro"] != "pii_bloqueada"]
+        bloqueadas = sum(1 for c in classificacoes if c.get("erro") == "pii_bloqueada")
+        span.set_attribute("feedbackloop.cache_hits", hits)
+        span.set_attribute("feedbackloop.erros_provedor", len(erros_provedor))
+
+    if total and len(erros_provedor) == total:
+        raise AnaliseFalhouError(Counter(erros_provedor).most_common(1)[0][0])
 
     top_temas = contar_temas([c["tema"] for c in classificacoes])[:top_n]
     contagem = contar_sentimentos([c["sentimento"] for c in classificacoes])
 
-    texto = gerar_resumo_llm(cliente, top_temas, contagem)
-    resumo = montar_resumo(top_temas, contagem, texto, len(respostas_limpas))
+    avisos = []
+    with tracer.start_as_current_span("resumo.gerar") as span:
+        try:
+            texto = gerar_resumo_llm(cliente, top_temas, contagem)
+        except Exception as exc:  # o resumo falha sozinho; os números continuam valendo
+            span.record_exception(exc)
+            span.set_status(Status(StatusCode.ERROR, type(exc).__name__))
+            texto = ""
+            avisos.append("O texto do resumo não pôde ser gerado pelo provedor de IA; os números abaixo estão corretos.")
+    resumo = montar_resumo(top_temas, contagem, texto, total)
+
+    if erros_provedor:
+        avisos.append(f"{len(erros_provedor)} de {total} respostas não puderam ser classificadas (erro do provedor).")
+    if bloqueadas:
+        avisos.append(f"{bloqueadas} resposta(s) foram retidas porque ainda continham dado pessoal reconhecível.")
+
+    nao_classificadas = sum(1 for c in classificacoes if c["tema"] == NAO_CLASSIFICADO)
+    temas_distintos = len({c["tema"] for c in classificacoes})
+    duracao = time.perf_counter() - inicio
+    _registrar_metricas_da_analise(
+        "parcial" if avisos else "ok", duracao, total, nao_classificadas,
+        (temas_distintos / total) if total else 0.0, entidades, max_workers, cache is not None,
+    )
+
+    metricas = {
+        "duracao_s": round(duracao, 3),
+        "respostas": total,
+        "workers": max_workers,
+        "chamadas_llm": uso.chamadas,
+        "erros_llm": uso.erros,
+        "cache_hits": hits,
+        "cache_misses": (total - hits) if cache is not None else 0,
+        "tokens_entrada": uso.tokens_entrada,
+        "tokens_saida": uso.tokens_saida,
+        "custo_usd": round(uso.custo_usd, 6),
+        "pii_mascarada": dict(entidades),
+        "pii_total": sum(entidades.values()),
+        "nao_classificadas": nao_classificadas,
+        "temas_distintos": temas_distintos,
+    }
+    obs.registrar_evento("analise.concluida", **{k: v for k, v in metricas.items() if k != "pii_mascarada"},
+                         pii_por_tipo=metricas["pii_mascarada"])
 
     return ResultadoAnalise(
-        total=len(respostas_limpas),
+        total=total,
         classificacoes=classificacoes,
         top_temas=top_temas,
         contagem_sentimentos=contagem,
         resumo=resumo,
+        avisos=avisos,
+        metricas=metricas,
     )
+
+
+def _registrar_metricas_da_analise(resultado, duracao, total, nao_classificadas, fragmentacao, entidades,
+                                   workers, cache_ligado):
+    i = obs.inst()
+    base = obs.attrs(resultado=resultado)
+    # `workers` e `cache` só rotulam a DURAÇÃO (poucos valores): é o que separa o antes e o depois
+    # no dashboard. Os contadores ficam sem esses rótulos para o ponto zero de partida funcionar.
+    i.analise_duracao.record(duracao, {**base, "workers": str(workers), "cache": "on" if cache_ligado else "off"})
+    i.analises.add(1, base)
+    i.respostas.add(total, obs.attrs())
+    if total:
+        i.nao_classificadas.add(nao_classificadas, obs.attrs())
+        i.fragmentacao.record(fragmentacao, obs.attrs())
+    for tipo, qtd in entidades.items():
+        i.pii_entidades.add(qtd, obs.attrs(tipo=tipo))

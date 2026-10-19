@@ -79,3 +79,25 @@ Pontos positivos que já reduzem o trabalho desta etapa:
 ## 4. Fora do escopo desta etapa
 
 Por decisão consciente (e alinhada ao roteiro de 12 semanas do `BRIEFING.md`), esta etapa **não** implementa: anonimização de PII, cache, persistência de resultados, taxonomia fixa de temas nem avaliação automatizada de qualidade do resumo. O foco da Etapa 1 é sair de "funciona no meu notebook" para "está publicado, versionado e eu sei operar" — a dívida de produto (itens 2.2 a 2.5, exceto segredo/rotação) é tratada explicitamente como backlog documentado, não como silêncio.
+
+## 5. Situação após a Etapa 2 (atualizado em 2026-10-19)
+
+As seções 1 a 4 descrevem o protótipo **como foi herdado** e foram mantidas como registro. Esta tabela diz o que mudou, com a evidência. "Parcial" e "não tratado" aparecem de propósito.
+
+| Lacuna (seção) | Situação | Evidência |
+|---|---|---|
+| 2.1 Segredo local possivelmente exposto, sem rotação documentada | **Tratado** | Rotação executada em 19/10/2026 nos três ambientes, com um incidente real e corrigido: [procedimento](seguranca/rotacao-de-credenciais.md), [registro](seguranca/registro-de-rotacoes.md), [post-mortem](post-mortem-2026-10-19-rotacao-de-chave.md); gitleaks e pip-audit em todo push |
+| 2.1 Mensagem amigável quando falta a chave | **Tratado** | Tela de erro no app e botão "Testar conexão com o provedor" |
+| 2.2 Nomes crus no prompt (LGPD) | **Parcial** | Sanitização antes de toda chamada, com trava final: [ADR-004](adr/0004-sanitizacao-de-pii-por-regras.md). Medido: recall **100%** nas categorias cobertas e **87,5%** no conjunto total; nomes raros sem pista e nomes em minúsculas **passam** ([avaliação](lgpd/avaliacao-sanitizacao-pii.md)). A saída continua tratada como dado pessoal |
+| 2.2 Base legal, finalidade e retenção | **Tratado, com pendências formais** | [Mapa de dados pessoais](lgpd/mapa-de-dados-pessoais.md), [política de retenção](lgpd/politica-de-retencao-e-exclusao.md), [transferência internacional](lgpd/transferencia-internacional.md). Pendências que exigem validação jurídica estão listadas lá (P-1 a P-6, T-1 a T-3) |
+| 2.3 Falha de parsing sem alerta | **Tratado** | Métrica de qualidade "% não classificadas" no dashboard; falha de uma resposta vira "Não classificado" com aviso na tela |
+| 2.3 Taxonomia fixa de temas | **Não tratado** | Medida a fragmentação: 23 a 24 temas em 36 respostas (64 a 67%); meta de produto (≤ 35%) não atingida ([métricas](observabilidade/metricas-e-alertas.md)) |
+| 2.3 Avaliação de qualidade do resumo | **Parcial** | Medida a **consistência** entre execuções (sentimento 100%, tema 95%), não a **correção** contra rótulos humanos ([relatório](otimizacao/otimizacao-concorrencia-e-cache.md)) |
+| 2.4 Observabilidade | **Tratado** | Traces, cinco métricas, dashboard e alerta testado ao vivo: [ADR-003](adr/0003-observabilidade-opentelemetry-grafana-cloud.md), [métricas e alertas](observabilidade/metricas-e-alertas.md) |
+| 2.5 Sem cache | **Tratado** | Cache com TTL: [ADR-005](adr/0005-otimizacao-concorrencia-e-cache.md); a reanálise cai de 32 s para 2,7 s (cache quente) |
+| 2.5 Sem persistência de resultados | **Não tratado** | Só o cache de classificações (sem texto) persiste; o resultado da análise continua só na sessão |
+| 2.5 Sem limite de tamanho de entrada | **Não tratado** | Planilha grande ainda gera custo proporcional sem aviso prévio |
+| 2.6 Sem CI/CD, ambientes, release | **Tratado na Etapa 1** | [README](../README.md#deploy-e-cicd), release v0.3.0 |
+| 2.7 Coluna do CSV fixa | **Tratado** | O app aceita apelidos comuns (`comentario`, `texto`, ...) e explica o erro |
+| 2.7 Erro de rede, timeout, limite de taxa | **Tratado** | Timeout e retry com backoff, mensagens por tipo de erro, degradação por resposta |
+| 2.7 Modelo fixo no código | **Tratado** | `OPENAI_MODEL` tem efeito (`feedbackloop/config.py`) |

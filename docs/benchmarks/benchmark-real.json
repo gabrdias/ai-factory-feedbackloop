@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "gerado_em": "2026-10-19T13:50:26+00:00",
+    "modo": "real",
+    "modelo": "gpt-5.4-mini",
+    "respostas": 36,
+    "repeticoes": 5,
+    "workers_nos_cenarios_concorrentes": 8,
+    "versao_app": "0.4.0",
+    "commit": "e896f9a",
+    "commit_sujo": false,
+    "python": "3.12.13",
+    "openai_sdk": "1.50.0",
+    "preco_entrada_usd_por_mtok": null,
+    "preco_saida_usd_por_mtok": null,
+    "observacao": "Chamadas reais ao provedor, da máquina de quem executou (a rede entra na medição)."
+  },
+  "cenarios": {
+    "A_sequencial_sem_cache": {
+      "descricao": "antes: sequencial, sem cache",
+      "workers": 1,
+      "cache": false,
+      "execucoes": [
+        {
+          "execucao": 1,
+          "duracao_s": 33.439,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 884,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 1.0
+        },
+        {
+          "execucao": 2,
+          "duracao_s": 29.284,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 896,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9444
+        },
+        {
+          "execucao": 3,
+          "duracao_s": 31.029,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 905,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 4,
+          "duracao_s": 30.448,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6370,
+          "tokens_saida": 880,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9444
+        },
+        {
+          "execucao": 5,
+          "duracao_s": 29.805,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 887,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 1.0
+        }
+      ],
+      "resumo": {
+        "n": 5,
+        "p50_s": 30.448,
+        "p95_s": 33.439,
+        "p99_s": 33.439,
+        "media_s": 30.801,
+        "min_s": 29.284,
+        "max_s": 33.439
+      }
+    },
+    "B_concorrente_sem_cache": {
+      "descricao": "depois: concorrente, sem cache",
+      "workers": 8,
+      "cache": false,
+      "execucoes": [
+        {
+          "execucao": 1,
+          "duracao_s": 6.11,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 895,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 23,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9444
+        },
+        {
+          "execucao": 2,
+          "duracao_s": 6.086,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 902,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 3,
+          "duracao_s": 5.818,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 839,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 4,
+          "duracao_s": 5.937,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 891,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9167
+        },
+        {
+          "execucao": 5,
+          "duracao_s": 6.539,
+          "chamadas_llm": 37,
+          "erros_llm": 0,
+          "cache_hits": 0,
+          "tokens_entrada": 6372,
+          "tokens_saida": 919,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 1.0,
+          "concordancia_tema_vs_baseline": 0.9444
+        }
+      ],
+      "resumo": {
+        "n": 5,
+        "p50_s": 6.086,
+        "p95_s": 6.539,
+        "p99_s": 6.539,
+        "media_s": 6.098,
+        "min_s": 5.818,
+        "max_s": 6.539
+      }
+    },
+    "C_concorrente_com_cache_quente": {
+      "descricao": "depois: concorrente + cache quente",
+      "workers": 8,
+      "cache": true,
+      "execucoes": [
+        {
+          "execucao": 1,
+          "duracao_s": 2.587,
+          "chamadas_llm": 1,
+          "erros_llm": 0,
+          "cache_hits": 36,
+          "tokens_entrada": 199,
+          "tokens_saida": 332,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 0.9722,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 2,
+          "duracao_s": 2.52,
+          "chamadas_llm": 1,
+          "erros_llm": 0,
+          "cache_hits": 36,
+          "tokens_entrada": 199,
+          "tokens_saida": 329,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 0.9722,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 3,
+          "duracao_s": 2.981,
+          "chamadas_llm": 1,
+          "erros_llm": 0,
+          "cache_hits": 36,
+          "tokens_entrada": 199,
+          "tokens_saida": 351,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 0.9722,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 4,
+          "duracao_s": 2.794,
+          "chamadas_llm": 1,
+          "erros_llm": 0,
+          "cache_hits": 36,
+          "tokens_entrada": 199,
+          "tokens_saida": 342,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 0.9722,
+          "concordancia_tema_vs_baseline": 0.9722
+        },
+        {
+          "execucao": 5,
+          "duracao_s": 2.902,
+          "chamadas_llm": 1,
+          "erros_llm": 0,
+          "cache_hits": 36,
+          "tokens_entrada": 199,
+          "tokens_saida": 352,
+          "custo_usd": 0.0,
+          "nao_classificadas": 0,
+          "temas_distintos": 24,
+          "concordancia_sentimento_vs_baseline": 0.9722,
+          "concordancia_tema_vs_baseline": 0.9722
+        }
+      ],
+      "resumo": {
+        "n": 5,
+        "p50_s": 2.794,
+        "p95_s": 2.981,
+        "p99_s": 2.981,
+        "media_s": 2.757,
+        "min_s": 2.52,
+        "max_s": 2.981
+      }
+    }
+  }
+}

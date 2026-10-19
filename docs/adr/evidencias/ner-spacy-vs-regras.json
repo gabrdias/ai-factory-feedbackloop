@@ -1,0 +1,179 @@
+﻿{
+  "so_regras": {
+    "recall_geral": 0.875,
+    "preservacao_geral": 0.9592,
+    "ms_por_texto": 0.06,
+    "por_categoria": {
+      "nome_lexico": {
+        "recall": 1.0,
+        "preservacao": null
+      },
+      "nome_gatilho": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "nome_sobrenome": {
+        "recall": 1.0,
+        "preservacao": null
+      },
+      "nome_sem_pista": {
+        "recall": 0.0,
+        "preservacao": null
+      },
+      "nome_minusculo": {
+        "recall": 0.0,
+        "preservacao": null
+      },
+      "email": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "cpf": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "telefone": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "handle": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "ids": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "negativo": {
+        "recall": null,
+        "preservacao": 1.0
+      },
+      "negativo_ambiguo": {
+        "recall": null,
+        "preservacao": 0.0
+      },
+      "misto": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      }
+    }
+  },
+  "so_ner_spacy": {
+    "recall_geral": 0.425,
+    "preservacao_geral": 0.9592,
+    "ms_por_texto": 3.84,
+    "por_categoria": {
+      "nome_lexico": {
+        "recall": 0.6667,
+        "preservacao": null
+      },
+      "nome_gatilho": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "nome_sobrenome": {
+        "recall": 0.8333,
+        "preservacao": null
+      },
+      "nome_sem_pista": {
+        "recall": 0.3333,
+        "preservacao": null
+      },
+      "nome_minusculo": {
+        "recall": 0.5,
+        "preservacao": null
+      },
+      "email": {
+        "recall": 0.0,
+        "preservacao": 1.0
+      },
+      "cpf": {
+        "recall": 0.0,
+        "preservacao": 1.0
+      },
+      "telefone": {
+        "recall": 0.0,
+        "preservacao": 1.0
+      },
+      "handle": {
+        "recall": 0.0,
+        "preservacao": 1.0
+      },
+      "ids": {
+        "recall": 0.0,
+        "preservacao": 1.0
+      },
+      "negativo": {
+        "recall": null,
+        "preservacao": 0.9459
+      },
+      "negativo_ambiguo": {
+        "recall": null,
+        "preservacao": 1.0
+      },
+      "misto": {
+        "recall": 0.3846,
+        "preservacao": 1.0
+      }
+    }
+  },
+  "regras_mais_ner": {
+    "recall_geral": 0.925,
+    "preservacao_geral": 0.9184,
+    "ms_por_texto": 3.99,
+    "por_categoria": {
+      "nome_lexico": {
+        "recall": 1.0,
+        "preservacao": null
+      },
+      "nome_gatilho": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "nome_sobrenome": {
+        "recall": 1.0,
+        "preservacao": null
+      },
+      "nome_sem_pista": {
+        "recall": 0.3333,
+        "preservacao": null
+      },
+      "nome_minusculo": {
+        "recall": 0.5,
+        "preservacao": null
+      },
+      "email": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "cpf": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "telefone": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "handle": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "ids": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      },
+      "negativo": {
+        "recall": null,
+        "preservacao": 0.9459
+      },
+      "negativo_ambiguo": {
+        "recall": null,
+        "preservacao": 0.0
+      },
+      "misto": {
+        "recall": 1.0,
+        "preservacao": 1.0
+      }
+    }
+  }
+}

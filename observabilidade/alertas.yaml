@@ -1,0 +1,98 @@
+# Regras de alerta do FeedbackLoop — documentação como código.
+#
+# As regras vivem no Grafana Cloud (Alerting > Alert rules). Este arquivo é a fonte de verdade do
+# que deve estar configurado lá, com a consulta exata, o limiar, a prioridade, o público e o canal.
+# Passo a passo de criação: docs/observabilidade/configurar-grafana.md
+# O que fazer quando disparam: docs/observabilidade/runbook.md
+#
+# Alerta sem ação é ruído (dica 3 do enunciado): toda regra tem prioridade, público, canal e ação.
+#
+# Prioridades
+#   P1  Fora do ar / sem funcionar para todos em produção. Agir na hora, a qualquer hora.
+#   P2  Funcionalidade principal degradada. Agir no mesmo dia útil, dentro de 1 hora.
+#   P3  Qualidade, custo ou desempenho fora da meta. Vira tarefa; resolver no ciclo da semana.
+
+canal_de_notificacao:
+  ponto_de_contato: ai-eng-oncall-email
+  tipo: E-mail (Grafana Alerting)
+  politica: "Política padrão -> ai-eng-oncall-email; agrupar por alertname e ambiente; repetir a cada 4 h enquanto disparado."
+
+regras:
+  - id: FL-ERRO-LLM
+    nome: "FeedbackLoop: provedor de IA falhando"
+    status: configurado    # criada no Grafana e disparada de verdade em 2026-10-19 (docs/observabilidade/simulado-de-alerta-2026-10-19.md)
+    prioridade: P2
+    ambientes: [dev, prod]
+    metrica_essencial: erro
+    consulta: |
+      (
+        sum by (ambiente) (increase(feedbackloop_llm_chamadas_total{ambiente=~"dev|prod",resultado="erro"}[5m]))
+        /
+        sum by (ambiente) (increase(feedbackloop_llm_chamadas_total{ambiente=~"dev|prod"}[5m]))
+      ) > 0.20
+      and on (ambiente)
+      sum by (ambiente) (increase(feedbackloop_llm_chamadas_total{ambiente=~"dev|prod"}[5m])) >= 5
+    condicao: "taxa de falha > 20% das chamadas ao provedor, em janela de 5 min, com pelo menos 5 chamadas"
+    avaliar_a_cada: 1m
+    ficar_pendente_por: 1m
+    sem_dados: OK   # sem tráfego não é incidente (a consulta já exige >= 5 chamadas)
+    o_que_faz_disparar:
+      - Chave de API recusada ou revogada (AuthenticationError). É o que acontece se uma chave for revogada antes de ser trocada.
+      - Créditos esgotados ou limite do provedor (RateLimitError).
+      - Provedor fora do ar, timeout ou falha de rede (APITimeoutError, APIConnectionError).
+    publico: "AI Engineer de plantão (responsável pelo serviço). Escalar para a Head de People Analytics se durar mais de 1 h ou virar P1."
+    canal: ai-eng-oncall-email
+    acao: "Abrir docs/observabilidade/runbook.md, seção 'FL-ERRO-LLM'. Primeiro olhar o painel 'Erro: falhas do provedor por tipo' para saber o tipo."
+    justificativa_do_limiar: >
+      O retry do SDK já absorve falhas isoladas (3 tentativas com backoff), então uma falha que chega ao
+      alerta é sistêmica. 20% em 5 min com no mínimo 5 chamadas evita disparar por 1 chamada ruim e ainda
+      pega uma chave inválida (100%) em segundos. Uma análise normal faz 37 chamadas; 5 é menos de uma análise.
+    escalonamento: "Em produção, taxa >= 90% por 10 min = P1 (o app não classifica nada)."
+
+  - id: FL-LATENCIA-P95
+    nome: "FeedbackLoop: análise lenta (p95 acima de 30 s)"
+    status: a_configurar
+    prioridade: P3
+    ambientes: [dev, prod]
+    metrica_essencial: latencia
+    consulta: |
+      histogram_quantile(0.95, sum by (le, ambiente) (increase(feedbackloop_analise_duracao_seconds_bucket{ambiente=~"dev|prod"}[1h]))) > 30
+      and on (ambiente)
+      sum by (ambiente) (increase(feedbackloop_analises_total{ambiente=~"dev|prod"}[1h])) >= 3
+    condicao: "p95 da duração da análise > 30 s na última hora, com pelo menos 3 análises"
+    avaliar_a_cada: 5m
+    ficar_pendente_por: 10m
+    sem_dados: OK
+    o_que_faz_disparar:
+      - Concorrência desligada ou reduzida (LLM_MAX_WORKERS baixo) ou cache desligado.
+      - Provedor lento ou muitas tentativas por limite de taxa (429).
+      - Planilha muito maior que a de exemplo.
+    publico: "AI Engineer (time de IA)"
+    canal: ai-eng-oncall-email
+    acao: "Runbook, seção 'FL-LATENCIA-P95'. Conferir LLM_MAX_WORKERS no ambiente e a taxa de acerto do cache."
+    justificativa_do_limiar: >
+      Ver docs/observabilidade/metricas-e-alertas.md. Antes da otimização a análise de 36 respostas levava
+      mais de 60 s, acima deste limite; depois, fica abaixo de 20 s. O alerta existe para detectar regressão.
+
+  - id: FL-VOLUME-ANOMALO
+    nome: "FeedbackLoop: volume de análises anormal (possível abuso ou laço de repetição)"
+    status: a_configurar
+    prioridade: P3
+    ambientes: [prod]
+    metrica_essencial: volume
+    consulta: |
+      sum by (ambiente) (increase(feedbackloop_analises_total{ambiente="prod"}[1h])) > 100
+    condicao: "mais de 100 análises na última hora em produção"
+    avaliar_a_cada: 5m
+    ficar_pendente_por: 5m
+    sem_dados: OK
+    o_que_faz_disparar:
+      - Uso muito acima do esperado para o piloto (poucas dezenas por dia).
+      - Script ou integração chamando o app em laço, ou abuso da URL pública.
+    publico: "AI Engineer (time de IA)"
+    canal: ai-eng-oncall-email
+    acao: "Runbook, seção 'FL-VOLUME-ANOMALO'. Ver custo do período e de onde vem o tráfego (logs da plataforma); limitar o acesso se for abuso."
+    justificativa_do_limiar: >
+      100 análises/hora custam cerca de US$ 0,9/hora com o preço medido (≈ US$ 0,009 por análise): ainda
+      barato, mas ~11x o esperado e o suficiente para indicar comportamento anormal antes de a conta
+      mensal sentir. É um sinal de contexto, não de indisponibilidade.

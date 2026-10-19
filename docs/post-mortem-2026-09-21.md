@@ -1,29 +1,28 @@
 # Post-mortem — 21/09/2026
 
 **Serviço:** `feedbackloop-prod` (produção)
-**Duração total de impacto:** ~17 minutos (09:37–09:54, horário de Brasília)
+**Duração do impacto (horário de Brasília):** bug de dependência — desde o primeiro deploy até 09:42; regressão simulada — 09:47 a 09:54 (7 min) e uma recorrência de ~12 min (≈09:58 a ≈10:10, estimada a partir dos pushes e do deploy da correção)
 **Severidade:** baixa (piloto sem usuários externos ainda; funcionalidade de análise indisponível para quem clicasse em "Analisar respostas")
 
 Este documento cobre dois problemas do mesmo dia: um **incidente real**, descoberto sem querer ao testar o primeiro deploy, e uma **regressão simulada de propósito**, usada para exercitar rollback. Nenhum dos dois teve origem em erro de uma pessoa específica — o objetivo aqui é entender causa e melhorar o processo, não apontar culpado.
 
 ## Linha do tempo
 
-| Hora (BRT) | Evento |
-|---|---|
-| ~09:37 | Deploy de uma nova funcionalidade (slider de quantidade de temas) em produção. CI passou normalmente. |
-| ~09:40 | Ao testar manualmente o botão "Analisar respostas", encontrado um erro **não relacionado à funcionalidade nova**: `TypeError: Client.__init__() got an unexpected keyword argument 'proxies'`, dentro de `feedbackloop/llm.py`. |
-| 09:41 | Diagnóstico: `httpx` (dependência transitiva do SDK da OpenAI) não estava fixado no `requirements.txt`. O Render instalou uma versão do `httpx` incompatível com `openai==1.50.0`. **Esse bug provavelmente estava em produção desde o primeiro deploy**, sem nenhum smoke test capaz de detectá-lo. |
-| 09:42 | Deploy da correção: `httpx==0.27.2` fixado, mais a correção da ordem do slider (definido antes do bloco do botão) e um novo teste de regressão que constrói o `ClienteLLM()` sem chamar a rede. |
-| 09:43 | Confirmado em produção: o erro mudou de `TypeError` (bug de dependência) para `RateLimitError: insufficient_quota` — prova de que o código passou a alcançar a API de verdade. A causa desse segundo erro é a conta da OpenAI sem créditos, não é um bug de código (ver "Ações de acompanhamento"). |
-| 09:46 | **Regressão simulada de propósito**, como exercício de rollback da Etapa 1: um commit de "refactor" reintroduz só o problema de ordenação do slider (`quantidade_temas` definido depois do bloco que o usa). CI passa normalmente — nenhum smoke test clica no botão "Analisar". |
-| 09:47 | Deploy do commit com a regressão sobe ao ar. |
-| ~09:50 | Bug reproduzido manualmente em produção: `UnboundLocalError: cannot access local variable 'quantidade_temas'`. Evidência salva em [`docs/incidente-2026-09-21/evidencia-erro-producao.txt`](incidente-2026-09-21/evidencia-erro-producao.txt). |
-| 09:53 | Rollback executado no painel do Render, do deploy do commit `0424cff` de volta para o `cdc9211` (o último deploy saudável). Evidência: [`docs/incidente-2026-09-21/evidencia-rollback-render.png`](incidente-2026-09-21/evidencia-rollback-render.png). |
-| 09:54 | Confirmado em produção: o erro voltou a ser `RateLimitError` (esperado, de billing), não mais `UnboundLocalError` — rollback bem-sucedido. |
-| ~10:15 | Commits seguintes (post-mortem, preparação de release) empurrados para `main` para documentar o incidente. Cada push disparou o CI/CD normalmente. |
-| ~10:30 | **O bug voltou sozinho.** O rollback no Render havia revertido só o *deploy ativo*, não o código em `main` — o commit `0424cff` (com o bug) continuava sendo o HEAD da branch. O primeiro push seguinte fez o CI/CD reimplantar automaticamente esse HEAD, desfazendo o rollback sem ninguém pedir. Reproduzido de novo em produção, confirmado por print do usuário. |
-| ~10:35 | Correção definitiva: um novo commit (`6baf705`) corrige a ordenação do slider **no código**, não só na infraestrutura. Só depois disso o bug fica resolvido de forma duradoura. |
+Fontes: horários de commit (`git log`) e histórico de deploys do Render (print em [`docs/incidente-2026-09-21/evidencia-rollback-render.png`](incidente-2026-09-21/evidencia-rollback-render.png)). Horários marcados como *estimado* não têm registro exato e foram inferidos dos eventos vizinhos.
 
+| Hora (BRT) | Evento | Fonte |
+|---|---|---|
+| 09:35 | Commit `3a9a2c5`: nova funcionalidade (slider de quantidade de temas) com a variável definida *depois* do bloco que a usa. CI passa e o deploy sobe. | commit |
+| 09:35–09:41 | Ao testar o botão "Analisar respostas" em produção, aparece um erro **sem relação com a funcionalidade nova**: `TypeError: Client.__init__() got an unexpected keyword argument 'proxies'`, dentro de `feedbackloop/llm.py`. Diagnóstico: `httpx` (dependência transitiva do SDK da OpenAI) não estava fixado e o Render instalou uma versão incompatível com `openai==1.50.0`. **Provavelmente existia desde o primeiro deploy**, porque nenhum smoke test construía o cliente de verdade. | observação manual (hora exata não registrada) |
+| 09:41–09:42 | Commit `cdc9211` corrige os dois problemas (fixa `httpx==0.27.2`, move o slider para antes do botão e adiciona teste de regressão que constrói o `ClienteLLM()`). Deploy live às 09:42. | commit + Render |
+| após 09:42 | Em produção o erro muda de `TypeError` para `RateLimitError: insufficient_quota` (conta da OpenAI sem créditos). Isso prova que o código passou a alcançar a API; o problema restante era de billing, não de código. | observação manual (hora exata não registrada) |
+| 09:46–09:47 | **Regressão simulada de propósito** (exercício de rollback da Etapa 1): commit `0424cff` ("refactor") move o slider de volta para depois do botão. CI passa (nenhum teste clica no botão). Deploy live às 09:47. | commit + Render |
+| 09:50–09:51 | Bug reproduzido em produção (`UnboundLocalError: cannot access local variable 'quantidade_temas'`). Evidência em [`docs/incidente-2026-09-21/evidencia-erro-producao.txt`](incidente-2026-09-21/evidencia-erro-producao.txt). Commit `d2cac5d` (só documentação) também faz deploy. | commit + Render |
+| 09:53–09:54 | **Rollback** no painel do Render, do deploy `0424cff` de volta para o `cdc9211`. Live às 09:54. Em produção o erro volta a ser o de billing, não mais o `UnboundLocalError`. | Render |
+| 09:57 | Commits `b706332` e `1506a4b` (post-mortem e preparação da release) empurrados para `main`. Cada push dispara o CI/CD, que reimplanta o **HEAD da branch** — e o HEAD ainda continha o bug do `0424cff`. **O rollback foi desfeito sozinho.** Deploy da recorrência: ≈09:58 (*estimado*). | commits |
+| entre 09:58 e 10:08 | A pessoa que testa o app em produção reporta o mesmo `UnboundLocalError` (print enviado). Hora exata do relato não registrada. | relato do usuário |
+| 10:08 | Commit `6baf705` corrige a ordenação do slider **no código**, não só na infraestrutura. Deploy da correção: ≈10:10 (*estimado*); durante a troca de instância o serviço respondeu 502 por alguns segundos. | commit |
+| 10:09 | Commit `161d144` registra neste post-mortem a lição "rollback de infra não substitui correção no código". | commit |
 ## Impacto
 
 Durante as janelas acima, qualquer pessoa que clicasse em "Analisar respostas" em produção via um erro em vez do resumo executivo. Como o piloto ainda não tem usuários externos reais, o impacto prático foi zero — mas o cenário é exatamente o que aconteceria com um cliente-piloto de verdade.

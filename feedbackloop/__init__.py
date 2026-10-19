@@ -1,10 +1,11 @@
 # Pacote feedbackloop — pipeline de análise de respostas abertas de pesquisa.
-# (Rafael)
 #
-# A ideia é manter a regra de negócio aqui dentro e deixar o app.py só com a UI.
-# Quase consegui. Quase. (ver README, seção dívida técnica)
+# A regra de negócio fica aqui dentro; o app.py só cuida da UI.
 
-from .pipeline import (
+__version__ = "1.0.0"
+
+from .pii import sanitizar, sanitizar_lote  # noqa: E402
+from .pipeline import (  # noqa: E402
     analisar,
     classificar_resposta,
     contar_sentimentos,
@@ -15,6 +16,7 @@ from .pipeline import (
 )
 
 __all__ = [
+    "__version__",
     "analisar",
     "classificar_resposta",
     "contar_sentimentos",
@@ -22,4 +24,6 @@ __all__ = [
     "montar_resumo",
     "parse_classificacao",
     "parse_sentimento",
+    "sanitizar",
+    "sanitizar_lote",
 ]

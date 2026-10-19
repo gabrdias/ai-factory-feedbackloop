@@ -79,5 +79,5 @@ def test_pipeline_processa_o_csv_de_exemplo_real():
 # ---------------------------------------------------------------------------
 
 def test_cliente_llm_constroi_sem_erro_de_dependencia(monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "sk-teste-fake-nao-e-uma-chave-real")
+    monkeypatch.setenv("OPENAI_API_KEY", "valor-falso-de-teste")
     ClienteLLM()

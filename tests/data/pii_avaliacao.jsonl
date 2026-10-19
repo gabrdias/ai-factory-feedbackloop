@@ -1,0 +1,88 @@
+{"id": 1, "cat": "nome_lexico", "texto": "O gerente Ricardo Alves muda as prioridades toda semana e ninguém entende o critério.", "pii": ["Ricardo Alves"], "manter": []}
+{"id": 2, "cat": "nome_lexico", "texto": "A Juliana Barbosa, do financeiro, sempre responde rápido e ajuda quem precisa.", "pii": ["Juliana Barbosa"], "manter": []}
+{"id": 3, "cat": "nome_lexico", "texto": "Depois que o Paulo saiu, o time ficou sobrecarregado e ninguém repôs a vaga.", "pii": ["Paulo"], "manter": []}
+{"id": 4, "cat": "nome_lexico", "texto": "Minha líder, Camila, confia no meu trabalho e dá autonomia.", "pii": ["Camila"], "manter": []}
+{"id": 5, "cat": "nome_lexico", "texto": "Rodrigo Martins cobra resultado mas não oferece apoio nenhum.", "pii": ["Rodrigo Martins"], "manter": []}
+{"id": 6, "cat": "nome_lexico", "texto": "Tive uma conversa difícil com a Patrícia de Souza Lima sobre meu aumento.", "pii": ["Patrícia de Souza Lima"], "manter": []}
+{"id": 7, "cat": "nome_lexico", "texto": "Gostaria de elogiar o Thiago e a Luciana, que me acolheram no primeiro dia.", "pii": ["Thiago", "Luciana"], "manter": []}
+{"id": 8, "cat": "nome_lexico", "texto": "O diretor Gustavo Henrique Pereira nunca aparece nas reuniões do time.", "pii": ["Gustavo Henrique Pereira"], "manter": []}
+{"id": 9, "cat": "nome_lexico", "texto": "Renata e Eduardo discutem na frente de todo mundo e ninguém faz nada.", "pii": ["Renata", "Eduardo"], "manter": []}
+{"id": 10, "cat": "nome_lexico", "texto": "Falei com o Marcelo da Silva sobre a escala de plantão e ele ignorou.", "pii": ["Marcelo da Silva"], "manter": []}
+{"id": 11, "cat": "nome_lexico", "texto": "A Bia e o Zé são ótimos, mas o resto da liderança some.", "pii": ["Bia", "Zé"], "manter": []}
+{"id": 12, "cat": "nome_lexico", "texto": "Quem mais me apoia é a Maria Clara dos Santos, minha colega de equipe.", "pii": ["Maria Clara dos Santos"], "manter": []}
+{"id": 13, "cat": "nome_lexico", "texto": "O Vinícius Oliveira foi promovido sem critério claro, e a Aline Rocha não.", "pii": ["Vinícius Oliveira", "Aline Rocha"], "manter": []}
+{"id": 14, "cat": "nome_lexico", "texto": "LARISSA MENDES, minha coordenadora, é a melhor chefe que já tive.", "pii": ["LARISSA MENDES"], "manter": []}
+{"id": 15, "cat": "nome_gatilho", "texto": "O gerente Wanderley cobra metas que mudam no meio do trimestre.", "pii": ["Wanderley"], "manter": []}
+{"id": 16, "cat": "nome_gatilho", "texto": "A diretora Ozanir Pacheco nunca respondeu meus e-mails.", "pii": ["Ozanir Pacheco"], "manter": []}
+{"id": 17, "cat": "nome_gatilho", "texto": "Meu coordenador Cleverson não dá feedback há meses.", "pii": ["Cleverson"], "manter": []}
+{"id": 18, "cat": "nome_gatilho", "texto": "Segundo o supervisor Valdemar, não há verba para treinamento.", "pii": ["Valdemar"], "manter": []}
+{"id": 19, "cat": "nome_gatilho", "texto": "A gestora Taynara Ferreira é muito organizada, mas centraliza tudo.", "pii": ["Taynara Ferreira"], "manter": []}
+{"id": 20, "cat": "nome_gatilho", "texto": "Meu chefe Jhonatan faz microgerenciamento e isso me desgasta.", "pii": ["Jhonatan"], "manter": []}
+{"id": 21, "cat": "nome_gatilho", "texto": "Sr. Edivaldo, do jurídico, vetou o home office sem explicar.", "pii": ["Edivaldo"], "manter": ["jurídico"]}
+{"id": 22, "cat": "nome_gatilho", "texto": "Dona Rosimeire, da recepção, é o coração da empresa.", "pii": ["Rosimeire"], "manter": ["recepção"]}
+{"id": 23, "cat": "nome_sobrenome", "texto": "Kauan Siqueira foi desligado sem aviso e ninguém explicou o motivo.", "pii": ["Kauan Siqueira"], "manter": []}
+{"id": 24, "cat": "nome_sobrenome", "texto": "A equipe do Ruan Cardoso entrega muito, mas o reconhecimento nunca chega.", "pii": ["Ruan Cardoso"], "manter": []}
+{"id": 25, "cat": "nome_sobrenome", "texto": "Taynara Oliveira e Josiane Nunes assumiram o projeto sem treinamento.", "pii": ["Taynara Oliveira", "Josiane Nunes"], "manter": []}
+{"id": 26, "cat": "nome_sobrenome", "texto": "Ademir Teixeira pediu demissão por causa da pressão de metas.", "pii": ["Ademir Teixeira"], "manter": []}
+{"id": 27, "cat": "nome_sobrenome", "texto": "O Hudson Moreira não me deixou participar da reunião estratégica.", "pii": ["Hudson Moreira"], "manter": []}
+{"id": 28, "cat": "nome_sem_pista", "texto": "Ontem a Ozanir me disse que o orçamento foi cortado.", "pii": ["Ozanir"], "manter": []}
+{"id": 29, "cat": "nome_sem_pista", "texto": "Cobraram isso do Genivaldo na reunião e ele ficou sem reação.", "pii": ["Genivaldo"], "manter": []}
+{"id": 30, "cat": "nome_sem_pista", "texto": "Quem decide tudo é o Ubiratan, o resto do time só executa.", "pii": ["Ubiratan"], "manter": []}
+{"id": 31, "cat": "nome_sem_pista", "texto": "Zuleide e Eronildes combinaram tudo por fora, sem avisar o time.", "pii": ["Zuleide", "Eronildes"], "manter": []}
+{"id": 32, "cat": "nome_sem_pista", "texto": "Falei com a Gessica e ela confirmou o atraso.", "pii": ["Gessica"], "manter": []}
+{"id": 33, "cat": "nome_minusculo", "texto": "o gerente marcos antunes muda tudo toda semana", "pii": ["marcos antunes"], "manter": []}
+{"id": 34, "cat": "nome_minusculo", "texto": "falei com a carolina mendes e ela concordou", "pii": ["carolina mendes"], "manter": []}
+{"id": 35, "cat": "nome_minusculo", "texto": "joão pereira é o único que escuta o time", "pii": ["joão pereira"], "manter": []}
+{"id": 36, "cat": "nome_minusculo", "texto": "ricardo alves não responde ninguém", "pii": ["ricardo alves"], "manter": []}
+{"id": 37, "cat": "email", "texto": "Mandei e-mail para joao.pereira@empresa.com.br e ninguém respondeu.", "pii": ["joao.pereira@empresa.com.br"], "manter": []}
+{"id": 38, "cat": "email", "texto": "Meu contato pessoal é marina_souza92@gmail.com se quiserem falar comigo.", "pii": ["marina_souza92@gmail.com"], "manter": []}
+{"id": 39, "cat": "email", "texto": "O RH (rh@empresa.com) nunca responde dentro do prazo.", "pii": ["rh@empresa.com"], "manter": ["RH"]}
+{"id": 40, "cat": "email", "texto": "Escrevi para ana.lima+reclamacao@corp.io duas vezes.", "pii": ["ana.lima+reclamacao@corp.io"], "manter": []}
+{"id": 41, "cat": "email", "texto": "Os contatos são carlos@x.com e paula@y.com.br, mas ninguém atende.", "pii": ["carlos@x.com", "paula@y.com.br"], "manter": []}
+{"id": 42, "cat": "cpf", "texto": "Preciso corrigir meu CPF 123.456.789-09 no sistema, mas o RH não resolve.", "pii": ["123.456.789-09"], "manter": ["RH"]}
+{"id": 43, "cat": "cpf", "texto": "Informei o CPF 52998224725 e mesmo assim o benefício não foi liberado.", "pii": ["52998224725"], "manter": []}
+{"id": 44, "cat": "cpf", "texto": "Meu cpf é 111.444.777-35 e o plano de saúde continua errado.", "pii": ["111.444.777-35"], "manter": []}
+{"id": 45, "cat": "cpf", "texto": "O sistema exigiu o CPF do meu dependente, 390.533.447-05, de novo.", "pii": ["390.533.447-05"], "manter": []}
+{"id": 46, "cat": "telefone", "texto": "Me liguem no (11) 98765-4321 porque o e-mail não funciona.", "pii": ["98765-4321"], "manter": []}
+{"id": 47, "cat": "telefone", "texto": "Meu celular é 21 99876-5432, mas ninguém do RH liga.", "pii": ["99876-5432"], "manter": ["RH"]}
+{"id": 48, "cat": "telefone", "texto": "O ramal do suporte é (47) 3333-4444 e vive ocupado.", "pii": ["3333-4444"], "manter": []}
+{"id": 49, "cat": "telefone", "texto": "WhatsApp: +55 31 98888-7777, podem chamar.", "pii": ["98888-7777"], "manter": ["WhatsApp"]}
+{"id": 50, "cat": "telefone", "texto": "Liguei para 11987654321 três vezes sem retorno.", "pii": ["11987654321"], "manter": []}
+{"id": 51, "cat": "telefone", "texto": "O telefone 3456-7890 da portaria não funciona.", "pii": ["3456-7890"], "manter": []}
+{"id": 52, "cat": "handle", "texto": "Falei no Slack com @marcos.antunes e ele só respondeu depois de dois dias.", "pii": ["@marcos.antunes"], "manter": ["Slack"]}
+{"id": 53, "cat": "handle", "texto": "Mencionei @paula_rh no canal e foi ignorado.", "pii": ["@paula_rh"], "manter": []}
+{"id": 54, "cat": "handle", "texto": "Meu perfil é @gabi_dev, podem ver lá.", "pii": ["@gabi_dev"], "manter": []}
+{"id": 55, "cat": "ids", "texto": "Minha matrícula 458213 está errada no holerite desde março.", "pii": ["458213"], "manter": ["holerite"]}
+{"id": 56, "cat": "ids", "texto": "Meu RG 12.345.678-9 foi registrado errado.", "pii": ["12.345.678-9"], "manter": []}
+{"id": 57, "cat": "ids", "texto": "O CEP 88010-400 do meu cadastro está desatualizado.", "pii": ["88010-400"], "manter": []}
+{"id": 58, "cat": "ids", "texto": "A empresa parceira, CNPJ 12.345.678/0001-95, atrasa os pagamentos.", "pii": ["12.345.678/0001-95"], "manter": []}
+{"id": 59, "cat": "ids", "texto": "Crachá 99123 não abre a porta do prédio novo.", "pii": ["99123"], "manter": []}
+{"id": 60, "cat": "ids", "texto": "Registro n. 77123 aparece duplicado no sistema.", "pii": ["77123"], "manter": []}
+{"id": 61, "cat": "negativo", "texto": "As reuniões no Microsoft Teams são longas demais e improdutivas.", "pii": [], "manter": ["Microsoft Teams"]}
+{"id": 62, "cat": "negativo", "texto": "Usamos Slack e Jira, mas as ferramentas vivem fora do ar.", "pii": [], "manter": ["Slack", "Jira"]}
+{"id": 63, "cat": "negativo", "texto": "O Home Office flexível mudou minha vida, mas falta apoio de Recursos Humanos.", "pii": [], "manter": ["Home Office", "Recursos Humanos"]}
+{"id": 64, "cat": "negativo", "texto": "O escritório de São Paulo tem mais benefícios que o de Florianópolis.", "pii": [], "manter": ["São Paulo", "Florianópolis"]}
+{"id": 65, "cat": "negativo", "texto": "O plano de saúde Bradesco cobre bem a minha família.", "pii": [], "manter": ["Bradesco"]}
+{"id": 66, "cat": "negativo", "texto": "Em João Pessoa a equipe trabalha sem estrutura adequada.", "pii": [], "manter": ["João Pessoa"]}
+{"id": 67, "cat": "negativo", "texto": "A nova política de Santa Catarina para o home office ajudou.", "pii": [], "manter": ["Santa Catarina"]}
+{"id": 68, "cat": "negativo", "texto": "Os cursos da Alura e da Udemy são ótimos, mas pouco incentivados.", "pii": [], "manter": ["Alura", "Udemy"]}
+{"id": 69, "cat": "negativo", "texto": "Meu salário não acompanha a inflação desde 2023 e já passamos de 2025.", "pii": [], "manter": ["2023", "2025"]}
+{"id": 70, "cat": "negativo", "texto": "Faço 30% a mais de horas por semana, sem compensação de R$ 5.000 mensais.", "pii": [], "manter": ["30%", "R$ 5.000"]}
+{"id": 71, "cat": "negativo", "texto": "O Banco do Brasil paga melhor que a gente em cargos equivalentes.", "pii": [], "manter": ["Banco do Brasil"]}
+{"id": 72, "cat": "negativo", "texto": "Gostaria de mais treinamentos de Power BI e Excel para o time comercial.", "pii": [], "manter": ["Power BI", "Excel"]}
+{"id": 73, "cat": "negativo", "texto": "O Google Meet cai toda hora e perdemos reuniões inteiras.", "pii": [], "manter": ["Google Meet"]}
+{"id": 74, "cat": "negativo", "texto": "A liderança precisa ser mais clara sobre as metas do próximo ano.", "pii": [], "manter": ["liderança"]}
+{"id": 75, "cat": "negativo", "texto": "Adoro a cultura da empresa e me sinto valorizado.", "pii": [], "manter": ["cultura"]}
+{"id": 76, "cat": "negativo", "texto": "Sábado e Domingo trabalhados sem hora extra paga; Segunda-feira ninguém reconhece.", "pii": [], "manter": ["Sábado", "Domingo", "Segunda-feira"]}
+{"id": 77, "cat": "negativo", "texto": "A Diretoria Executiva anuncia mudanças sem ouvir as equipes.", "pii": [], "manter": ["Diretoria Executiva"]}
+{"id": 78, "cat": "negativo", "texto": "O onboarding do RH foi bom, mas o de TI foi péssimo.", "pii": [], "manter": ["RH", "TI"]}
+{"id": 79, "cat": "negativo", "texto": "Trabalho na Engenharia e a pressão da Diretoria é insuportável.", "pii": [], "manter": ["Engenharia", "Diretoria"]}
+{"id": 80, "cat": "negativo", "texto": "A Cruz Vermelha e o Rotary fazem campanhas internas, mas ninguém divulga.", "pii": [], "manter": ["Cruz Vermelha", "Rotary"]}
+{"id": 81, "cat": "negativo", "texto": "Trabalhei seis meses no Rio de Janeiro e depois fui para Curitiba.", "pii": [], "manter": ["Rio de Janeiro", "Curitiba"]}
+{"id": 82, "cat": "negativo", "texto": "Preciso do PowerPoint e do Word atualizados, o Windows trava.", "pii": [], "manter": ["PowerPoint", "Word", "Windows"]}
+{"id": 83, "cat": "negativo_ambiguo", "texto": "Marcos importantes do projeto foram esquecidos pela liderança.", "pii": [], "manter": ["Marcos importantes"]}
+{"id": 84, "cat": "negativo_ambiguo", "texto": "Clara demais a diferença de tratamento entre as áreas.", "pii": [], "manter": ["Clara demais"]}
+{"id": 85, "cat": "misto", "texto": "O gerente Ricardo Alves (ricardo.alves@empresa.com, 11 91234-5678) cancelou meu CPF 529.982.247-25 do plano.", "pii": ["Ricardo Alves", "ricardo.alves@empresa.com", "91234-5678", "529.982.247-25"], "manter": []}
+{"id": 86, "cat": "misto", "texto": "Falei com a Camila e o Bruno Dias; passei meu contato (21) 98765-1234 e o e-mail bruno.dias@x.com.", "pii": ["Camila", "Bruno Dias", "98765-1234", "bruno.dias@x.com"], "manter": []}
+{"id": 87, "cat": "misto", "texto": "No Slack, @patricia.lima disse que a Fernanda Costa aprovaria, mas a matrícula 100234 segue pendente.", "pii": ["@patricia.lima", "Fernanda Costa", "100234"], "manter": ["Slack"]}
+{"id": 88, "cat": "misto", "texto": "Sr. Wanderley Cunha e a Dra. Luciana Prado discutiram meu caso com o RH.", "pii": ["Wanderley Cunha", "Luciana Prado"], "manter": ["RH"]}
