@@ -32,6 +32,13 @@ Olhe o painel **"Erro: falhas do provedor por tipo"** (ou a consulta `sum by (ti
 3. Comparar o tamanho da planilha: a duração cresce com o número de respostas.
 4. Se foi regressão de código, abrir tarefa com o commit suspeito (o app mostra o commit em execução na barra lateral).
 
+## FL-VOLUME-ANOMALO (P3): volume de análises anormal
+
+1. Abrir o dashboard em **ambiente = prod** e ver o painel "Volume: análises por resultado" por hora. O piloto espera poucas dezenas de análises por dia; mais de 100 em uma hora é fora do padrão.
+2. Ver o custo do período (caixa "Custo por análise" × volume). Com ≈ US$ 0,009 por análise, 100 por hora ainda custa menos de US$ 1/h: **não é emergência financeira**, é sinal de comportamento estranho.
+3. Descobrir a origem: logs de acesso do Render (IPs e horários) e o painel de PII mascarada (se o volume vem de planilhas parecidas ou de uma mesma).
+4. Se for abuso ou laço de repetição: limitar o acesso à URL (plano pago do Render permite restringir) ou desligar o serviço enquanto se investiga; trocar chaves só se houver suspeita de vazamento.
+
 ## Depois de qualquer incidente real
 
 Registrar um post-mortem curto, sem culpados, no padrão de [`docs/post-mortem-2026-09-21.md`](../post-mortem-2026-09-21.md): linha do tempo com horários comprovados, causa, o que funcionou, o que não funcionou e ações.

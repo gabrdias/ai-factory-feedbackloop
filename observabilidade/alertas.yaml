@@ -73,3 +73,26 @@ regras:
     justificativa_do_limiar: >
       Ver docs/observabilidade/metricas-e-alertas.md. Antes da otimização a análise de 36 respostas levava
       mais de 60 s, acima deste limite; depois, fica abaixo de 20 s. O alerta existe para detectar regressão.
+
+  - id: FL-VOLUME-ANOMALO
+    nome: "FeedbackLoop: volume de análises anormal (possível abuso ou laço de repetição)"
+    status: a_configurar
+    prioridade: P3
+    ambientes: [prod]
+    metrica_essencial: volume
+    consulta: |
+      sum by (ambiente) (increase(feedbackloop_analises_total{ambiente="prod"}[1h])) > 100
+    condicao: "mais de 100 análises na última hora em produção"
+    avaliar_a_cada: 5m
+    ficar_pendente_por: 5m
+    sem_dados: OK
+    o_que_faz_disparar:
+      - Uso muito acima do esperado para o piloto (poucas dezenas por dia).
+      - Script ou integração chamando o app em laço, ou abuso da URL pública.
+    publico: "AI Engineer (time de IA)"
+    canal: ai-eng-oncall-email
+    acao: "Runbook, seção 'FL-VOLUME-ANOMALO'. Ver custo do período e de onde vem o tráfego (logs da plataforma); limitar o acesso se for abuso."
+    justificativa_do_limiar: >
+      100 análises/hora custam cerca de US$ 0,9/hora com o preço medido (≈ US$ 0,009 por análise): ainda
+      barato, mas ~11x o esperado e o suficiente para indicar comportamento anormal antes de a conta
+      mensal sentir. É um sinal de contexto, não de indisponibilidade.

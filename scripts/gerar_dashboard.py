@@ -118,8 +118,8 @@ def gerar() -> dict:
         stat(6, "Erro: taxa de falha do LLM", razao(erros, chamadas), 16, 3, 4, "percentunit", passos(0.02, 0.05), 1,
              "Chamadas ao provedor que falharam / total. Meta: abaixo de 2%; alerta P2 a partir de 20% em 2 min."),
         stat(7, "Custo por análise (US$)", f"({custo}) / ({analises}) > 0", 20, 3, 4,
-             "currencyUSD", passos(0.05, 0.10), 4,
-             "Custo estimado / análises. Sem preço configurado (LLM_PRECO_*_USD_POR_MTOK) mostra 'sem dados' em vez de 0. Meta: até US$ 0,05."),
+             "currencyUSD", passos(0.015, 0.03), 4,
+             "Custo estimado / análises de 36 respostas. Medido: ≈ US$ 0,009. Meta: até US$ 0,015; atenção acima de US$ 0,03. Sem preço configurado mostra 'sem dados'."),
         # --- linha 2: latência ao longo do tempo e volume --------------------------------------
         serie(8, "Latência da análise: p50, p95 e p99", [
             (quantil_serie(0.50), "p50"), (quantil_serie(0.95), "p95"), (quantil_serie(0.99), "p99")],

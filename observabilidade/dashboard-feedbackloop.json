@@ -408,7 +408,7 @@
       "id": 7,
       "type": "stat",
       "title": "Custo por análise (US$)",
-      "description": "Custo estimado / análises. Sem preço configurado (LLM_PRECO_*_USD_POR_MTOK) mostra 'sem dados' em vez de 0. Meta: até US$ 0,05.",
+      "description": "Custo estimado / análises de 36 respostas. Medido: ≈ US$ 0,009. Meta: até US$ 0,015; atenção acima de US$ 0,03. Sem preço configurado mostra 'sem dados'.",
       "gridPos": {
         "x": 20,
         "y": 3,
@@ -445,11 +445,11 @@
               },
               {
                 "color": "yellow",
-                "value": 0.05
+                "value": 0.015
               },
               {
                 "color": "red",
-                "value": 0.1
+                "value": 0.03
               }
             ]
           },
