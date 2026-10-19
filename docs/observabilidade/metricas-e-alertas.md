@@ -72,3 +72,8 @@ Fonte de verdade: [`observabilidade/alertas.yaml`](../../observabilidade/alertas
 * **Primeira análise após cada reinício do serviço** não entra nos percentis (um histograma que nasce já com valor perde o primeiro incremento no `increase()`); ela serve de aquecimento. Os **contadores** têm ponto zero de partida e **são** contados.
 * **O serviço gratuito do Render dorme** sem uso: sem tráfego não há métricas, e o alerta baseado em tráfego não vê falhas.
 * Retenção de 14 dias no plano gratuito do Grafana Cloud.
+
+## 6. Produção sob observação
+
+Após a promoção da v1.0.0 (19/10/2026), o dashboard com `ambiente = prod` recebeu telemetria do prod: [captura](evidencias/dashboard-prod-2026-10-19.png). Nas primeiras análises (2 na janela), taxa de erro 0,0% e custo estimado de US$ 0,0044 por análise (média de 2 análises, uma delas servida em parte pelo cache). As caixas de latência mostravam "sem dados": a primeira análise após o reinício é aquecimento e não entra nos percentis (limite descrito acima), e com n = 2 não há percentil que valha. O alerta `FL-ERRO-LLM` cobre o prod (a regra filtra por `ambiente`, não por serviço), mas **o simulado de disparo foi feito só no dev**.
+
