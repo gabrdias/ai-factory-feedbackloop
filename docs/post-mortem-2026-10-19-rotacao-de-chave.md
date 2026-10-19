@@ -48,5 +48,5 @@ Fuso de Brasília. `≈` = informado de memória; as demais horas vêm do relóg
 | Aplicar a chave nova no prod com deploy | ✅ Feito (verificado às 09:38) |
 | Botão **"Testar conexão com o provedor"** na barra lateral do app: uma chamada mínima (≈ US$ 0,00001) que prova que **aquela instância** tem chave válida | ✅ Feito (`feat: botão de teste de conexão`) |
 | Procedimento de rotação passa a exigir: deploy, **clicar em Testar conexão em cada ambiente** e só depois revogar | ✅ Feito (`docs/seguranca/rotacao-de-credenciais.md`, seção 3) |
-| Promover a versão com telemetria para o prod (release v1.0.0), para o alerta cobrir o prod de verdade | ⬜ Pendente (planejado nesta etapa) |
+| Promover a versão com telemetria para o prod (release v1.0.0), para o alerta cobrir o prod de verdade | ✅ Feito em 2026-10-19 (commit `a6b87e2`, tag `v1.0.0`; CI/CD e smoke test passaram) |
 | Repetir um simulado de alerta **também no prod** depois da promoção | ⬜ Pendente |
