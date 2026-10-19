@@ -166,7 +166,7 @@ class Instrumentos:
             self.cache_consultas.add(0, {**a, "resultado": resultado})
         for tipo in ("PESSOA", "EMAIL", "CPF", "CNPJ", "RG", "MATRICULA", "CEP", "TELEFONE", "URL", "USUARIO"):
             self.pii_entidades.add(0, {**a, "tipo": tipo})
-        for operacao in ("classificar", "resumo"):
+        for operacao in ("classificar", "resumo", "teste"):
             self.pii_bloqueios.add(0, {**a, "operacao": operacao})
             self.llm_custo.add(0.0, {**a, "operacao": operacao})
             for resultado in ("ok", "erro"):

@@ -141,6 +141,26 @@ def test_desligar_o_cache_pela_barra_lateral_nao_grava_nada(monkeypatch):
     assert any("0 entradas" in t for t in textos(at.sidebar.markdown))
 
 
+def test_botao_testar_conexao_confirma_chave_valida_e_mostra_erro_amigavel(monkeypatch):
+    at = app_pronto(monkeypatch)
+    at.button(key="testar_conexao").click().run()
+    assert any("chave deste ambiente é válida" in t for t in textos(at.sidebar.success))
+
+    class AuthenticationError(Exception):
+        pass
+
+    class Recusado:
+        modelo = "x"
+
+        def completar(self, system, user, temperatura=0.2):
+            raise AuthenticationError("401")
+
+    at2 = app_pronto(monkeypatch, Recusado)
+    at2.button(key="testar_conexao").click().run()
+    assert not at2.exception
+    assert any("recusou a chave" in t for t in textos(at2.sidebar.error))
+
+
 def test_csv_com_coluna_comentario_tambem_funciona(monkeypatch, tmp_path):
     # Dívida documentada por Rafael: a coluna "resposta" era fixa e quebrava com "comentario".
     import io

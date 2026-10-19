@@ -7,6 +7,7 @@
 # (3) usa concorrência + cache. Regra de negócio em feedbackloop/, aqui só a UI.
 
 import io
+import time
 
 import pandas as pd
 import streamlit as st
@@ -65,6 +66,22 @@ def _inicializar():
     return cfg, cache
 
 
+def _testar_conexao() -> None:
+    """Uma chamada mínima ao provedor: prova que ESTA instância tem uma chave válida (use após rotacionar)."""
+    token = obs.operacao_corrente.set("teste")
+    try:
+        cliente = ClienteLLM()
+        inicio = time.perf_counter()
+        cliente.completar(system="Responda apenas com a palavra: ok", user="ping", temperatura=0.0)
+        st.success(f"Provedor respondeu em {time.perf_counter() - inicio:.1f} s: a chave deste ambiente é válida.")
+    except KeyError:
+        st.error("OPENAI_API_KEY não configurada neste ambiente.")
+    except Exception as exc:
+        st.error(MENSAGENS_DE_ERRO.get(type(exc).__name__, f"Erro do provedor de IA ({type(exc).__name__})."))
+    finally:
+        obs.operacao_corrente.reset(token)
+
+
 def _barra_lateral(cfg, cache):
     """Desenha a barra lateral e devolve (chamadas_em_paralelo, usar_cache)."""
     with st.sidebar:
@@ -87,6 +104,8 @@ def _barra_lateral(cfg, cache):
                 "Usar cache", value=cache is not None, disabled=cache is None, key="usar_cache",
                 help="Desligue para medir o custo e a latência sem cache.",
             )
+        if st.button("Testar conexão com o provedor", key="testar_conexao"):
+            _testar_conexao()
         if cfg.dashboard_url:
             st.markdown(f"[Painel de observabilidade]({cfg.dashboard_url})")
     return int(workers), bool(usar_cache and cache is not None)
