@@ -1,14 +1,14 @@
 # Blueprint do Render — define os dois serviços (dev e prod) do FeedbackLoop.
 # Ver docs/adr/0002-plataforma-de-deploy.md para a justificativa da escolha.
 #
-# autoDeploy é `false` nos dois de propósito: quem dispara o deploy é o
-# workflow do GitHub Actions (.github/workflows/ci-cd.yml), só depois que os
-# testes e o gitleaks passam. Isso evita publicar código que não passou no CI.
+# autoDeploy é `false` nos dois de propósito: quem dispara o deploy é o workflow do
+# GitHub Actions (.github/workflows/ci-cd.yml), só depois que os testes e o gitleaks
+# passam. Isso evita publicar código que não passou no CI.
 #
-# OPENAI_API_KEY tem `sync: false` nos dois: o valor não fica neste arquivo
-# nem no Git. É configurado manualmente uma vez no dashboard de cada serviço
-# (Environment > Add Environment Variable), com uma chave DIFERENTE em cada
-# ambiente — é isso que torna a separação dev/prod real.
+# SEGREDOS: toda variável com `sync: false` tem o valor configurado manualmente, UMA VEZ,
+# no dashboard de cada serviço (Environment). O valor não fica neste arquivo nem no Git,
+# e é DIFERENTE em cada ambiente — é isso que torna a separação dev/prod real.
+# Procedimento de troca: docs/seguranca/rotacao-de-credenciais.md
 
 services:
   - type: web
@@ -20,10 +20,26 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
     envVars:
-      - key: OPENAI_API_KEY
-        sync: false
       - key: PYTHON_VERSION
         value: 3.12.0
+      # segredos (valor diferente em cada serviço)
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false
+      # configuração não secreta
+      - key: LLM_MAX_WORKERS
+        value: "8"
+      - key: CACHE_TTL_DIAS
+        value: "30"
+      - key: LLM_PRECO_ENTRADA_USD_POR_MTOK
+        sync: false
+      - key: LLM_PRECO_SAIDA_USD_POR_MTOK
+        sync: false
+      - key: DASHBOARD_URL
+        sync: false
 
   - type: web
     name: feedbackloop-prod
@@ -34,7 +50,21 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
     envVars:
-      - key: OPENAI_API_KEY
-        sync: false
       - key: PYTHON_VERSION
         value: 3.12.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false
+      - key: LLM_MAX_WORKERS
+        value: "8"
+      - key: CACHE_TTL_DIAS
+        value: "30"
+      - key: LLM_PRECO_ENTRADA_USD_POR_MTOK
+        sync: false
+      - key: LLM_PRECO_SAIDA_USD_POR_MTOK
+        sync: false
+      - key: DASHBOARD_URL
+        sync: false

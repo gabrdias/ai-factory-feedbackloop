@@ -5,6 +5,13 @@ on:
     branches: ["**"]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 12 * * 1"   # toda segunda, 12:00 UTC (09:00 em Brasília): reaudita dependências e segredos
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   test:
@@ -20,16 +27,31 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Instalar dependências
+      - name: Instalar dependências (versões 100% travadas)
         run: pip install -r requirements.txt
 
-      - name: Rodar smoke tests + testes de pipeline (offline, sem chamar a API real)
+      - name: Rodar testes (offline, sem chamar a API real)
         run: pytest -q
 
       - name: Verificar segredos vazados no histórico (gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auditoria-dependencias:
+    name: Auditoria de dependências (pip-audit)
+    runs-on: ubuntu-latest
+    # Roda em paralelo e NÃO bloqueia o deploy: uma CVE nova não pode impedir um hotfix,
+    # mas deixa o workflow vermelho e visível. Ver docs/seguranca/auditoria-de-dependencias.md.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Procurar vulnerabilidades conhecidas nas versões travadas
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit -r requirements.txt --no-deps --disable-pip
 
   deploy:
     name: Deploy (${{ github.ref_name }})
