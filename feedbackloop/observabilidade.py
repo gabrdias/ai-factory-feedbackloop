@@ -15,6 +15,7 @@ definido (Grafana Cloud em dev/prod). Sem isso, a instrumentação continua func
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import os
@@ -37,6 +38,23 @@ NOME_DO_SERVICO = "feedbackloop"
 _BUCKETS_ANALISE_S = (0.5, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180)
 _BUCKETS_LLM_S = (0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 20, 30)
 _BUCKETS_RAZAO = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+
+
+def _cabecalhos_otlp() -> dict | None:
+    """Monta o header de autenticação do Grafana Cloud a partir de duas variáveis simples.
+
+    GRAFANA_INSTANCE_ID + GRAFANA_TOKEN  ->  Authorization: Basic base64("id:token").
+    Se OTEL_EXPORTER_OTLP_HEADERS já vier pronto, o SDK o usa e esta função não interfere.
+    O token nunca é registrado em log nem em span.
+    """
+    if os.getenv("OTEL_EXPORTER_OTLP_HEADERS"):
+        return None
+    instancia = os.getenv("GRAFANA_INSTANCE_ID", "").strip()
+    token = os.getenv("GRAFANA_TOKEN", "").strip()
+    if not (instancia and token):
+        return None
+    cred = base64.b64encode(f"{instancia}:{token}".encode("utf-8")).decode("ascii")
+    return {"Authorization": f"Basic {cred}"}
 
 
 class _Estado:
@@ -141,9 +159,12 @@ def configurar(*, ambiente: str = "local", versao: str = "0", span_processors=No
             from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-            processors.append(BatchSpanProcessor(OTLPSpanExporter()))
+            cabecalhos = _cabecalhos_otlp()
+            processors.append(BatchSpanProcessor(OTLPSpanExporter(headers=cabecalhos)))
             intervalo = int(os.getenv("OTEL_METRIC_EXPORT_INTERVAL", "15000"))
-            readers.append(PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=intervalo))
+            readers.append(
+                PeriodicExportingMetricReader(OTLPMetricExporter(headers=cabecalhos), export_interval_millis=intervalo)
+            )
 
         provider_trace = TracerProvider(resource=recurso)
         for p in processors:

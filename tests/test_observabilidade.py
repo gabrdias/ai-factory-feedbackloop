@@ -75,6 +75,41 @@ def soma(lista, **filtro):
     return sum(p.value for p in lista if all(p.attributes.get(k) == v for k, v in filtro.items()))
 
 
+# --- Autenticação do exportador ---------------------------------------------------------
+
+def test_header_do_grafana_e_montado_a_partir_do_id_e_do_token(monkeypatch):
+    import base64
+
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_HEADERS", raising=False)
+    monkeypatch.setenv("GRAFANA_INSTANCE_ID", "123456")
+    monkeypatch.setenv("GRAFANA_TOKEN", "token-falso-de-teste")
+    esperado = base64.b64encode(b"123456:token-falso-de-teste").decode()
+    assert obs._cabecalhos_otlp() == {"Authorization": f"Basic {esperado}"}
+
+
+def test_header_pronto_tem_prioridade_e_sem_credenciais_nao_inventa_nada(monkeypatch):
+    monkeypatch.setenv("GRAFANA_INSTANCE_ID", "1")
+    monkeypatch.setenv("GRAFANA_TOKEN", "x")
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_HEADERS", "Authorization=Basic%20pronto")
+    assert obs._cabecalhos_otlp() is None  # o SDK usa o valor pronto
+    monkeypatch.delenv("OTEL_EXPORTER_OTLP_HEADERS")
+    monkeypatch.delenv("GRAFANA_TOKEN")
+    assert obs._cabecalhos_otlp() is None
+
+
+def test_o_token_nunca_aparece_em_span_metrica_nem_log(telemetria, monkeypatch, capsys):
+    spans, leitor = telemetria
+    monkeypatch.setenv("GRAFANA_INSTANCE_ID", "123456")
+    monkeypatch.setenv("GRAFANA_TOKEN", "token-secreto-nao-pode-vazar")
+    obs._cabecalhos_otlp()
+    cliente = cliente_com(OpenAIFalso(), monkeypatch)
+    analisar(cliente, ["Gosto do time"])
+    tudo = capsys.readouterr().out + " ".join(
+        str(v) for s in spans.get_finished_spans() for v in list(s.attributes.values()) + [s.name]
+    )
+    assert "token-secreto-nao-pode-vazar" not in tudo
+
+
 # --- Chamada ao LLM ---------------------------------------------------------------------
 
 def test_chamada_registra_span_tokens_custo_e_latencia(telemetria, monkeypatch):

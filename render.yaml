@@ -27,7 +27,9 @@ services:
         sync: false
       - key: OTEL_EXPORTER_OTLP_ENDPOINT
         sync: false
-      - key: OTEL_EXPORTER_OTLP_HEADERS
+      - key: GRAFANA_INSTANCE_ID
+        sync: false
+      - key: GRAFANA_TOKEN
         sync: false
       # configuração não secreta
       - key: LLM_MAX_WORKERS
@@ -56,7 +58,9 @@ services:
         sync: false
       - key: OTEL_EXPORTER_OTLP_ENDPOINT
         sync: false
-      - key: OTEL_EXPORTER_OTLP_HEADERS
+      - key: GRAFANA_INSTANCE_ID
+        sync: false
+      - key: GRAFANA_TOKEN
         sync: false
       - key: LLM_MAX_WORKERS
         value: "8"
