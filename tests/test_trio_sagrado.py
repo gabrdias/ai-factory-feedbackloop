@@ -66,7 +66,10 @@ def test_toda_variavel_lida_pelo_codigo_esta_documentada_no_env_example():
         for padrao in padroes:
             lidas.update(re.findall(padrao, codigo))
 
-    fornecidas_pela_plataforma = {"RENDER_SERVICE_NAME"}  # o Render define sozinho
+    fornecidas_pela_plataforma = {  # o Render define sozinho em runtime
+        "RENDER", "RENDER_SERVICE_NAME", "RENDER_EXTERNAL_HOSTNAME", "RENDER_EXTERNAL_URL",
+        "RENDER_GIT_BRANCH", "RENDER_GIT_COMMIT",
+    }
     so_para_testes = {"FEEDBACKLOOP_IGNORAR_DOTENV"}
     lidas -= fornecidas_pela_plataforma | so_para_testes
     lidas |= {"OTEL_EXPORTER_OTLP_HEADERS"}  # lida pela biblioteca do exportador, não pelo nosso código

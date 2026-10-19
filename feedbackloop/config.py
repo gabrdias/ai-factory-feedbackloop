@@ -41,15 +41,20 @@ def _booleano(nome: str, padrao: bool) -> bool:
 
 
 def _detectar_ambiente() -> str:
+    """APP_ENV manda; senão deduz das variáveis que o Render injeta (nome do serviço, host, branch)."""
     explicito = os.getenv("APP_ENV", "").strip().lower()
     if explicito:
         return explicito
-    servico = os.getenv("RENDER_SERVICE_NAME", "").lower()  # definido pelo Render
-    if servico.endswith("prod"):
+    pistas = " ".join(
+        os.getenv(v, "").lower()
+        for v in ("RENDER_SERVICE_NAME", "RENDER_EXTERNAL_HOSTNAME", "RENDER_EXTERNAL_URL")
+    )
+    branch = os.getenv("RENDER_GIT_BRANCH", "").strip().lower()
+    if "prod" in pistas or branch == "main":
         return "prod"
-    if servico.endswith("dev"):
+    if "dev" in pistas or branch == "develop":
         return "dev"
-    return "local"
+    return "render" if os.getenv("RENDER", "").lower() == "true" else "local"
 
 
 @dataclass(frozen=True)
@@ -66,6 +71,7 @@ class Config:
     preco_saida_usd_por_mtok: float | None
     dashboard_url: str
     versao: str
+    commit: str
 
 
 def carregar() -> Config:
@@ -82,4 +88,5 @@ def carregar() -> Config:
         preco_saida_usd_por_mtok=_decimal_opcional("LLM_PRECO_SAIDA_USD_POR_MTOK"),
         dashboard_url=os.getenv("DASHBOARD_URL", "").strip(),
         versao=__version__,
+        commit=os.getenv("RENDER_GIT_COMMIT", "").strip()[:7],
     )

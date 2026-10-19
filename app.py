@@ -68,7 +68,7 @@ def _inicializar():
 def _barra_lateral(cfg, cache):
     with st.sidebar:
         st.header("Operação")
-        st.caption(f"Ambiente: **{cfg.ambiente}** · versão {cfg.versao}")
+        st.caption(f"Ambiente: **{cfg.ambiente}** · versão {cfg.versao}" + (f" · commit `{cfg.commit}`" if cfg.commit else ""))
         st.write(f"Modelo: `{cfg.modelo}`")
         st.write(f"Chamadas em paralelo: {cfg.max_workers}")
         if cache is None:

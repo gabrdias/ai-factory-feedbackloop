@@ -24,6 +24,26 @@ def test_ambiente_e_deduzido_do_nome_do_servico_no_render(monkeypatch):
     assert config.carregar().ambiente == "staging"
 
 
+def test_ambiente_tambem_e_deduzido_pela_branch_e_pelo_host_do_render(monkeypatch):
+    for var in ("APP_ENV", "RENDER_SERVICE_NAME", "RENDER_EXTERNAL_HOSTNAME", "RENDER_EXTERNAL_URL", "RENDER_GIT_BRANCH", "RENDER"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("RENDER_GIT_BRANCH", "develop")
+    assert config.carregar().ambiente == "dev"
+    monkeypatch.setenv("RENDER_GIT_BRANCH", "main")
+    assert config.carregar().ambiente == "prod"
+    monkeypatch.delenv("RENDER_GIT_BRANCH")
+    monkeypatch.setenv("RENDER_EXTERNAL_HOSTNAME", "feedbackloop-dev-6yzb.onrender.com")
+    assert config.carregar().ambiente == "dev"
+    monkeypatch.delenv("RENDER_EXTERNAL_HOSTNAME")
+    monkeypatch.setenv("RENDER", "true")
+    assert config.carregar().ambiente == "render"  # no Render, mas sem pista de qual serviço
+
+
+def test_commit_em_execucao_vem_do_render(monkeypatch):
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "0123456789abcdef")
+    assert config.carregar().commit == "0123456"
+
+
 def test_valores_invalidos_caem_no_padrao_em_vez_de_quebrar(monkeypatch):
     monkeypatch.setenv("LLM_MAX_WORKERS", "muitos")
     monkeypatch.setenv("LLM_PRECO_ENTRADA_USD_POR_MTOK", "caro")
