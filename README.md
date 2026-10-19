@@ -129,7 +129,7 @@ Documentação técnica, **não parecer jurídico**. Os pontos que dependem do j
 
 ## Observabilidade
 
-**Dashboard (Grafana Cloud):** [LINK_DO_DASHBOARD](LINK_DO_DASHBOARD) · definição versionada em [`observabilidade/dashboard-feedbackloop.json`](observabilidade/dashboard-feedbackloop.json) (gerada por `scripts/gerar_dashboard.py`). Os números do dashboard conferem com o [relatório de otimização](docs/otimizacao/otimizacao-concorrencia-e-cache.md#44-conferência-com-o-dashboard-do-grafana-fonte-independente), inclusive as contagens de análises.
+**Dashboard (Grafana Cloud):** [https://dapperbuttercup3020.grafana.net/public-dashboards/764c75d61c704d8a86a115a2cd7f72f2](https://dapperbuttercup3020.grafana.net/public-dashboards/764c75d61c704d8a86a115a2cd7f72f2) · definição versionada em [`observabilidade/dashboard-feedbackloop.json`](observabilidade/dashboard-feedbackloop.json) (gerada por `scripts/gerar_dashboard.py`). Os números do dashboard conferem com o [relatório de otimização](docs/otimizacao/otimizacao-concorrencia-e-cache.md#44-conferência-com-o-dashboard-do-grafana-fonte-independente), inclusive as contagens de análises.
 
 Cada análise gera **um trace** (`analise → pii.sanitizar, classificar.lote → classificar.resposta → llm.chamada, resumo.gerar`) e métricas, enviados por OpenTelemetry. **Nenhum span, métrica ou log contém texto de resposta, nome ou token** (testes automatizados).
 

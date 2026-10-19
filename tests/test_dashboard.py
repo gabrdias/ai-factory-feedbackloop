@@ -91,3 +91,15 @@ def test_dashboard_so_usa_prometheus_para_poder_ser_compartilhado_publicamente()
     for p in gerar()["panels"]:
         if p["type"] != "text":
             assert p["datasource"]["type"] == "prometheus"
+
+
+def test_versao_publica_nao_tem_variaveis_e_usa_fonte_e_ambiente_fixos():
+    from scripts.gerar_dashboard import gerar_publico
+
+    dash = gerar_publico("meu-uid-prom", "dev")
+    texto = json.dumps(dash, ensure_ascii=False)
+    assert "${datasource}" not in texto and "$ambiente" not in texto
+    assert "meu-uid-prom" in texto
+    exprs = [t["expr"] for p in dash["panels"] for t in p.get("targets", [])]
+    assert exprs and all('ambiente=~"dev"' in e for e in exprs)
+    assert dash["templating"]["list"] == []

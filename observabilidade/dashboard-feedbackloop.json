@@ -340,7 +340,7 @@
       "id": 6,
       "type": "stat",
       "title": "Erro: taxa de falha do LLM",
-      "description": "Chamadas ao provedor que falharam / total. Meta: abaixo de 2%; alerta P2 a partir de 20% em 2 min.",
+      "description": "Chamadas ao provedor que falharam / total. Meta: abaixo de 2%; alerta P2 a partir de 20% em 5 min (com pelo menos 5 chamadas).",
       "gridPos": {
         "x": 16,
         "y": 3,

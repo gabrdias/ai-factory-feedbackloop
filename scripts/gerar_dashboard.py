@@ -7,6 +7,14 @@
 Importar no Grafana: Dashboards > New > Import > Upload JSON. O dashboard pergunta a fonte de
 dados Prometheus (a que termina em "-prom") e filtra por ambiente (dev/prod/benchmark).
 
+Versão para link público ("Share externally" do Grafana): o Grafana não suporta variáveis em
+dashboards compartilhados externamente, então
+
+    python scripts/gerar_dashboard.py --publico --datasource-uid <UID da fonte Prometheus> --ambiente dev
+
+grava observabilidade/dashboard-feedbackloop-publico.json com a fonte e o ambiente fixos (sem
+variáveis). O UID está na URL da fonte em Connections > Data sources (não é segredo).
+
 Limiares (verde/amarelo/vermelho) e a justificativa de cada um estão em
 docs/observabilidade/metricas-e-alertas.md. Um teste garante que o JSON versionado é igual ao
 que este script gera e que toda métrica das consultas existe no código.
@@ -116,7 +124,7 @@ def gerar() -> dict:
         stat(5, "Latência p99 (s)", quantil_janela(0.99), 12, 3, 4, "s", passos(30, 60), 1,
              "Cauda longa (1 em 100). Meta: até 30 s; limite: 60 s."),
         stat(6, "Erro: taxa de falha do LLM", razao(erros, chamadas), 16, 3, 4, "percentunit", passos(0.02, 0.05), 1,
-             "Chamadas ao provedor que falharam / total. Meta: abaixo de 2%; alerta P2 a partir de 20% em 2 min."),
+             "Chamadas ao provedor que falharam / total. Meta: abaixo de 2%; alerta P2 a partir de 20% em 5 min (com pelo menos 5 chamadas)."),
         stat(7, "Custo por análise (US$)", f"({custo}) / ({analises}) > 0", 20, 3, 4,
              "currencyUSD", passos(0.015, 0.03), 4,
              "Custo estimado / análises de 36 respostas. Medido: ≈ US$ 0,009. Meta: até US$ 0,015; atenção acima de US$ 0,03. Sem preço configurado mostra 'sem dados'."),
@@ -204,17 +212,47 @@ def gerar() -> dict:
     }
 
 
+def gerar_publico(datasource_uid: str, ambiente: str) -> dict:
+    """Versão sem variáveis, para o link público: fonte de dados e ambiente fixos."""
+    texto = json.dumps(gerar(), ensure_ascii=False)
+    texto = texto.replace("${datasource}", datasource_uid).replace("$ambiente", ambiente)
+    dash = json.loads(texto)
+    dash["uid"] = "feedbackloop-saude-publico"
+    dash["title"] = "FeedbackLoop — Saúde do deployment (público)"
+    dash["templating"] = {"list": []}
+    dash["panels"][0]["options"]["content"] = (
+        f"**FeedbackLoop — saúde do deployment (visão pública, ambiente `{ambiente}`).** Verde = dentro da meta, "
+        "amarelo = atenção, vermelho = acima do limite; as caixas usam a janela de tempo escolhida no canto superior direito. "
+        "Limiares e justificativas: `docs/observabilidade/metricas-e-alertas.md`. "
+        "As caixas **Antes e depois** comparam as configurações medidas (1 em paralelo sem cache, 8 em paralelo, 8 em paralelo com cache); "
+        "a de cache ligado mistura reanálises quentes e execuções frias. "
+        "Nenhuma métrica contém texto de respostas ou dado pessoal."
+    )
+    return dash
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stdout", action="store_true")
+    ap.add_argument("--publico", action="store_true", help="versão sem variáveis para o link público")
+    ap.add_argument("--datasource-uid", help="UID da fonte Prometheus (obrigatório com --publico)")
+    ap.add_argument("--ambiente", default="dev", help="ambiente fixo da versão pública (padrão: dev)")
     args = ap.parse_args()
-    texto = json.dumps(gerar(), ensure_ascii=False, indent=2) + "\n"
+    destino = DESTINO
+    if args.publico:
+        if not args.datasource_uid:
+            ap.error("--publico exige --datasource-uid")
+        dash = gerar_publico(args.datasource_uid, args.ambiente)
+        destino = DESTINO.with_name("dashboard-feedbackloop-publico.json")
+    else:
+        dash = gerar()
+    texto = json.dumps(dash, ensure_ascii=False, indent=2) + "\n"
     if args.stdout:
         print(texto)
     else:
-        DESTINO.parent.mkdir(parents=True, exist_ok=True)
-        DESTINO.write_text(texto, encoding="utf-8", newline="\n")
-        print(f"Gravado em {DESTINO}")
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(texto, encoding="utf-8", newline="\n")
+        print(f"Gravado em {destino}")
     return 0
 
 
