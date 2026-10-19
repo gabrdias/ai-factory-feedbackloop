@@ -108,6 +108,9 @@ class Instrumentos:
         self.llm_chamadas = meter.create_counter(
             "feedbackloop.llm.chamadas", description="Chamadas ao provedor de LLM (resultado ok|erro)",
         )
+        self.llm_erros = meter.create_counter(
+            "feedbackloop.llm.erros", description="Erros do provedor por tipo (diagnóstico; o alerta usa llm.chamadas)",
+        )
         self.llm_tokens = meter.create_counter(
             "feedbackloop.llm.tokens", description="Tokens consumidos (tipo entrada|saida)",
         )
@@ -140,6 +143,34 @@ class Instrumentos:
         self.cache_purgados = meter.create_counter(
             "feedbackloop.cache.purgados", description="Entradas removidas por expiração (retenção)",
         )
+
+
+    def aquecer(self, ambiente: str) -> None:
+        """Emite um ponto ZERO para cada série de contador conhecida.
+
+        O Prometheus calcula `increase()` entre dois pontos; uma série que nasce já valendo 1
+        (ex.: a primeira análise depois de cada reinício do Render gratuito) teria esse 1
+        ignorado. Com o zero de partida, o primeiro incremento passa a ser contado. Séries com
+        rótulo imprevisível (ex.: o tipo de erro) ficam de fora de propósito: por isso o erro
+        usado nos alertas é `llm.chamadas{resultado="erro"}`, sem esse rótulo.
+        """
+        a = {"ambiente": ambiente}
+        for resultado in ("ok", "parcial", "erro"):
+            self.analises.add(0, {**a, "resultado": resultado})
+        self.respostas.add(0, a)
+        self.nao_classificadas.add(0, a)
+        self.cache_purgados.add(0, a)
+        for resultado in ("hit", "miss"):
+            self.cache_consultas.add(0, {**a, "resultado": resultado})
+        for tipo in ("PESSOA", "EMAIL", "CPF", "CNPJ", "RG", "MATRICULA", "CEP", "TELEFONE", "URL", "USUARIO"):
+            self.pii_entidades.add(0, {**a, "tipo": tipo})
+        for operacao in ("classificar", "resumo"):
+            self.pii_bloqueios.add(0, {**a, "operacao": operacao})
+            self.llm_custo.add(0.0, {**a, "operacao": operacao})
+            for resultado in ("ok", "erro"):
+                self.llm_chamadas.add(0, {**a, "operacao": operacao, "resultado": resultado})
+            for tipo in ("entrada", "saida"):
+                self.llm_tokens.add(0, {**a, "operacao": operacao, "tipo": tipo})
 
 
 def configurar(*, ambiente: str = "local", versao: str = "0", span_processors=None,
@@ -184,6 +215,7 @@ def configurar(*, ambiente: str = "local", versao: str = "0", span_processors=No
         _estado.provider_metricas = provider_metricas
         _estado.tracer = provider_trace.get_tracer(NOME_DO_SERVICO, versao)
         _estado.inst = Instrumentos(provider_metricas.get_meter(NOME_DO_SERVICO, versao))
+        _estado.inst.aquecer(ambiente)
         _estado.ambiente = ambiente
         _estado.versao = versao
         _estado.pronto = True

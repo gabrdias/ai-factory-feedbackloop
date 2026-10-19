@@ -74,7 +74,8 @@ class ClienteLLM:
                 tipo = type(exc).__name__
                 span.set_attribute("feedbackloop.tipo_erro", tipo)
                 i = obs.inst()
-                i.llm_chamadas.add(1, {**base, "resultado": "erro", "tipo_erro": tipo})
+                i.llm_chamadas.add(1, {**base, "resultado": "erro"})
+                i.llm_erros.add(1, {**base, "tipo_erro": tipo})
                 i.llm_duracao.record(duracao, {**base, "resultado": "erro"})
                 uso = obs.uso_corrente.get()
                 if uso is not None:

@@ -110,6 +110,21 @@ def test_o_token_nunca_aparece_em_span_metrica_nem_log(telemetria, monkeypatch, 
     assert "token-secreto-nao-pode-vazar" not in tudo
 
 
+# --- Ponto zero de partida dos contadores -----------------------------------------------
+
+def test_contadores_nascem_com_ponto_zero_para_o_increase_enxergar_o_primeiro_evento(telemetria):
+    _, leitor = telemetria
+    m = pontos(leitor)  # nenhuma análise ainda: só o aquecimento
+    for nome in ("feedbackloop.analises", "feedbackloop.llm.chamadas", "feedbackloop.respostas",
+                 "feedbackloop.llm.tokens", "feedbackloop.llm.custo_usd", "feedbackloop.cache.consultas"):
+        assert nome in m, nome
+        assert soma(m[nome]) == 0 and all(p.attributes["ambiente"] == "teste" for p in m[nome])
+    # as séries que o alerta de erro usa existem com os dois resultados, sem rótulo de tipo
+    resultados = {p.attributes["resultado"] for p in m["feedbackloop.llm.chamadas"]}
+    assert resultados == {"ok", "erro"}
+    assert all("tipo_erro" not in p.attributes for p in m["feedbackloop.llm.chamadas"])
+
+
 # --- Chamada ao LLM ---------------------------------------------------------------------
 
 def test_chamada_registra_span_tokens_custo_e_latencia(telemetria, monkeypatch):
@@ -141,7 +156,8 @@ def test_erro_do_provedor_vira_metrica_de_erro_e_span_com_status_de_erro(telemet
     assert span.status.status_code == StatusCode.ERROR
     assert span.attributes["feedbackloop.tipo_erro"] == "TimeoutError"
     m = pontos(leitor)
-    assert soma(m["feedbackloop.llm.chamadas"], resultado="erro", tipo_erro="TimeoutError") == 1
+    assert soma(m["feedbackloop.llm.chamadas"], resultado="erro") == 1  # a série do alerta não tem o rótulo tipo_erro
+    assert soma(m["feedbackloop.llm.erros"], tipo_erro="TimeoutError") == 1  # diagnóstico por tipo
 
 
 def test_trava_de_pii_bloqueia_antes_de_chamar_o_provedor(telemetria, monkeypatch):
