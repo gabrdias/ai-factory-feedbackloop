@@ -138,7 +138,7 @@ def _previa_de_privacidade(respostas: list[str]) -> None:
             for o, s in mudadas[:10]
         ]
         with st.expander(f"Exemplos de texto mascarado ({len(mudadas)} resposta(s) alteradas)", expanded=True):
-            st.dataframe(pd.DataFrame(linhas), use_container_width=True)
+            st.dataframe(pd.DataFrame(linhas))
 
 
 def _mostrar_resultado(resultado) -> None:
@@ -158,7 +158,7 @@ def _mostrar_resultado(resultado) -> None:
 
     st.markdown("#### Detalhe por resposta (texto como foi enviado ao provedor)")
     tabela = pd.DataFrame(resultado.classificacoes)[["resposta", "tema", "sentimento", "origem"]]
-    st.dataframe(tabela, use_container_width=True)
+    st.dataframe(tabela)
 
     st.caption(
         "Este resultado não é salvo em lugar nenhum. O único dado que persiste é o cache "
