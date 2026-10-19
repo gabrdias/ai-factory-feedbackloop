@@ -149,8 +149,8 @@ def gerar() -> dict:
         stat(16, "Qualidade: fragmentação de temas",
              f"sum(increase(feedbackloop_qualidade_fragmentacao_temas_sum{A}[{R}])) / "
              f"sum(increase(feedbackloop_qualidade_fragmentacao_temas_count{A}[{R}]))",
-             9, 23, 5, "percentunit", passos(0.35, 0.60), 0,
-             "Temas distintos / respostas. 100% = cada resposta virou um tema (agregação inútil). Meta: abaixo de 35%."),
+             9, 23, 5, "percentunit", passos(0.70, 0.85), 0,
+             "Temas distintos / respostas. 100% = cada resposta virou um tema (agregação inútil). Linha de base medida: 64 a 67% (23 a 24 temas em 36 respostas, benchmark local). Verde até 70%, amarelo até 85%: detecta piora. A meta de produto (abaixo de 35%) ainda não é atingida."),
         stat(17, "Cache: taxa de acerto",
              razao(total("feedbackloop_cache_consultas_total", '{ambiente=~"$ambiente",resultado="hit"}'),
                    total("feedbackloop_cache_consultas_total")), 14, 23, 5, "percentunit", None, 0,
