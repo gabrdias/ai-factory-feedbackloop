@@ -66,11 +66,11 @@ def _inicializar():
 
 
 def _barra_lateral(cfg, cache):
+    """Desenha a barra lateral e devolve (chamadas_em_paralelo, usar_cache)."""
     with st.sidebar:
         st.header("Operação")
         st.caption(f"Ambiente: **{cfg.ambiente}** · versão {cfg.versao}" + (f" · commit `{cfg.commit}`" if cfg.commit else ""))
         st.write(f"Modelo: `{cfg.modelo}`")
-        st.write(f"Chamadas em paralelo: {cfg.max_workers}")
         if cache is None:
             st.write("Cache: desligado")
         else:
@@ -78,8 +78,18 @@ def _barra_lateral(cfg, cache):
             st.caption("Guarda só um hash do texto já mascarado e o tema/sentimento. Nunca o texto.")
             if st.button("Excluir cache agora", key="limpar_cache"):
                 st.success(f"{cache.limpar()} entradas removidas.")
+        with st.expander("Avançado: medir otimizações"):
+            workers = st.number_input(
+                "Chamadas em paralelo", min_value=1, max_value=16, value=cfg.max_workers, step=1, key="workers",
+                help="1 = sequencial (como era antes da Etapa 2). Mais paralelo = menos tempo, mais chamadas simultâneas ao provedor.",
+            )
+            usar_cache = st.checkbox(
+                "Usar cache", value=cache is not None, disabled=cache is None, key="usar_cache",
+                help="Desligue para medir o custo e a latência sem cache.",
+            )
         if cfg.dashboard_url:
             st.markdown(f"[Painel de observabilidade]({cfg.dashboard_url})")
+    return int(workers), bool(usar_cache and cache is not None)
 
 
 def _entrada_de_dados() -> list[str]:
@@ -169,7 +179,7 @@ def _mostrar_resultado(resultado) -> None:
 def main():
     st.set_page_config(page_title="FeedbackLoop — Insights", page_icon="📊")
     cfg, cache = _inicializar()
-    _barra_lateral(cfg, cache)
+    workers, usar_cache = _barra_lateral(cfg, cache)
 
     st.title("📊 FeedbackLoop — Survey Insights")
     st.caption(
@@ -198,8 +208,8 @@ def main():
                     cliente,
                     respostas,
                     top_n=quantidade_temas,
-                    max_workers=cfg.max_workers,
-                    cache=cache,
+                    max_workers=workers,
+                    cache=cache if usar_cache else None,
                     modelo=getattr(cliente, "modelo", cfg.modelo),
                 )
         except AnaliseFalhouError as exc:

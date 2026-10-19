@@ -252,8 +252,19 @@ def test_histograma_de_duracao_tem_buckets_para_p95_e_p99(telemetria, monkeypatc
     cliente = cliente_com(OpenAIFalso(), monkeypatch)
     analisar(cliente, ["a b c"])
     [ponto] = pontos(leitor)["feedbackloop.analise.duracao"]
-    assert ponto.explicit_bounds == (0.5, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180)
+    assert ponto.explicit_bounds == (0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 120, 180)
     assert ponto.count == 1
+
+
+def test_duracao_da_analise_e_rotulada_com_workers_e_cache_para_o_antes_e_depois(telemetria, monkeypatch, tmp_path):
+    _, leitor = telemetria
+    cliente = cliente_com(OpenAIFalso(), monkeypatch)
+    analisar(cliente, ["a", "b", "c"], max_workers=1)
+    analisar(cliente, ["a", "b", "c"], max_workers=3, cache=CacheClassificacao(tmp_path / "c.db"), modelo="m")
+    pares = {(p.attributes["workers"], p.attributes["cache"]) for p in pontos(leitor)["feedbackloop.analise.duracao"]}
+    assert pares == {("1", "off"), ("3", "on")}
+    # os contadores NÃO levam esses rótulos (para o ponto zero de partida cobrir todas as séries)
+    assert all("workers" not in p.attributes for p in pontos(leitor)["feedbackloop.analises"])
 
 
 def test_analise_que_falha_por_completo_conta_como_erro(telemetria, monkeypatch):
