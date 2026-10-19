@@ -76,6 +76,20 @@ Medido nestas execuções (distribuição de sentimento positivo/neutro/negativo
 * **O que isso permite afirmar:** não há sinal de degradação sistemática de qualidade; a diferença de B em 1 de 5 execuções é do tamanho da variação já vista entre execuções A.
 * **O que isso NÃO permite afirmar:** concordância resposta a resposta entre antes e depois. Isso precisa do benchmark local (`scripts/benchmark.py`, cenário A repetido contra si mesmo como linha de base). **Esta medição ainda não foi feita**, e por isso este relatório não cita percentual de concordância.
 
+### 4.4 Conferência com o dashboard do Grafana (fonte independente)
+
+Captura dos painéis "Antes e depois" ([imagem](../observabilidade/evidencias/dashboard-antes-e-depois-2026-10-19.png); ambiente `dev`, janela das medições, 19/10/2026), comparada com as tabelas acima:
+
+| Painel (rótulos `workers` / `cache`) | Grafana p50 | Grafana p95 | Análises contadas | Esta tabela |
+|---|---:|---:|---:|---|
+| 1 em paralelo, cache off | 31.7 s | 39.2 s | 5 | A: p50 32.3 s, máx 36.4 s, n = 5 |
+| 8 em paralelo, cache off | 6.7 s | 7.8 s | 8 | B + Bc: n = 5 + 3 = 8; mediana das 8 = 6.8 s, máx 7.7 s |
+| 8 em paralelo, cache on | 3.5 s | 8.7 s | 8 | C + Cf: n = 5 + 3 = 8 (**5 reanálises quentes + 3 frias**); mediana das 8 = 3.0 s, máx 8.8 s |
+
+* **As contagens batem exatamente** (5, 8 e 8): o dashboard viu as mesmas execuções que o coletor, e a primeira de cada configuração foi realmente descartada nos dois.
+* **Os percentis diferem porque o Grafana interpola dentro das faixas (buckets) do histograma, e dá para reproduzir o número exato:** no cenário A, 2 execuções ficam na faixa 20 a 30 s (27.9 e 29.3) e 3 na faixa 30 a 40 s (32.3, 33.6 e 36.4). O p50 interpolado é 30 + 10 × (2,5 − 2) / 3 = **31.7 s** e o p95 é 30 + 10 × (4,75 − 2) / 3 = **39.2 s**, exatamente o que o painel mostra. A faixa larga faz o painel superestimar a cauda (39.2 s contra o máximo real de 36.4 s); **a tabela 4.1 é a fonte dos números citados**, e o painel confirma contagens e ordem de grandeza.
+* **O painel "8 em paralelo, cache on" mistura reanálises quentes (≈ 2,7 s) com execuções frias (≈ 7 a 9 s, do controle Cf)**, e por isso mostra p50 = 3.5 s e p95 = 8.7 s. Ele **não** representa o cache quente sozinho; o número do cache quente é o da tabela 4.1 (p50 = 2.7 s, n = 5). Em produção o painel terá a mesma mistura, proporcional à taxa de reanálise: é assim que ele deve ser lido.
+
 ## 5. Trade-offs (o que se paga por esse ganho)
 
 1. **Mais chamadas simultâneas aumentam o risco de limite de taxa (HTTP 429).** Com 8 chamadas em paralelo e ≈ 6 mil tokens por análise, o piloto está longe do limite; com várias pessoas usando ao mesmo tempo, não sabemos. Mitigação: teto de 16 workers e retry com backoff do SDK (`LLM_MAX_RETRIES=3`). A análise continua mesmo se algumas respostas falharem. **Não foi testado sob carga de várias pessoas.**
@@ -91,7 +105,7 @@ Medido nestas execuções (distribuição de sentimento positivo/neutro/negativo
 * **Uma execução fria isolada levou 17.5 s** (a primeira do cenário C, quando o cache estava vazio sendo preenchido). Depois, 3 execuções frias repetidas deram 7.0, 7.3 e 8.8 s. **Não identifiquei a causa** (pode ser latência pontual do provedor ou da instância gratuita); ela foi descartada como aquecimento, mas fica registrada aqui e nos dados brutos, e **não** foi usada para esconder nem para inflar nada.
 * **Defeito do coletor, corrigido:** na primeira versão, após detectar o fim da análise, o coletor lia os campos de uma vez; a tela do Streamlit atualiza de cima para baixo e, em pelo menos uma execução (C, registro 2), chamadas/tokens/custo foram lidos ainda do resultado anterior. Os registros afetados estão marcados com `null` nos dados brutos e fora das médias dessas colunas. O coletor passou a reler até o valor se estabilizar (as coletas `Bc` e `Cf` já usaram a versão corrigida). A **duração** vem do primeiro campo atualizado e foi conferida contra o relógio de parede, com uma exceção: no registro A3, a duração (33.6 s) ficou 1,2 s **acima** do relógio medido (32.4 s), o que não deveria ocorrer; mantive o valor porque o app é a fonte primária, e o efeito sobre a mediana é nulo (a mediana de A é o registro A4, 32.3 s).
 * **Duas execuções iguais seguidas.** Os registros A1/A2 e B1/B2 têm duração e tokens idênticos. Como o relógio de parede de cada um é diferente (A: 42.8 s e 36.8 s; B: 8.6 s e 7.3 s) e o primeiro de cada cenário é descartado, aceitei os dados; se fossem leituras repetidas, o efeito seria sobre um único ponto das 5 medidas de cada cenário.
-* **p95 e p99 com n = 5 são o máximo observado.** Os painéis do Grafana interpolam dentro de faixas (buckets) do histograma; por isso, valores de p95 no dashboard podem diferir de alguns décimos dos aqui calculados. O dashboard serve para acompanhar tendência; **esta tabela é a fonte dos números do vídeo e do README**.
+* **p95 e p99 com n = 5 são o máximo observado.** Os painéis do Grafana interpolam dentro de faixas (buckets) do histograma e por isso diferem da tabela (§4.4; no cenário A, o p95 do painel é 39.2 s contra 36.4 s medidos). O dashboard serve para acompanhar tendência; **a tabela 4.1 é a fonte dos números do vídeo e do README**.
 
 ## 7. Conclusão
 
@@ -109,5 +123,4 @@ Medido nestas execuções (distribuição de sentimento positivo/neutro/negativo
 ## 9. Próximos passos
 
 * Rodar o benchmark local com linha de base A contra A para medir a concordância resposta a resposta e acrescentar o resultado aqui.
-* Conferir o dashboard (painéis "Antes e depois") com a janela de tempo das medições e anexar a captura.
 * Experimento futuro com avaliação própria de qualidade: agrupar respostas por chamada (*batch prompting*) e taxonomia fixa de temas (reduz a fragmentação de temas).
