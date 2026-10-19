@@ -1,0 +1,12 @@
+# Configuração do Streamlit versionada (os SEGREDOS ficam fora: .streamlit/secrets.toml está no .gitignore).
+
+[browser]
+# Privacidade: por padrão o Streamlit envia estatísticas de uso ao fabricante. Desligado.
+gatherUsageStats = false
+
+[server]
+headless = true
+
+[client]
+# Não mostra o stack trace completo ao usuário final; o detalhe fica nos logs/traces.
+showErrorDetails = "none"
