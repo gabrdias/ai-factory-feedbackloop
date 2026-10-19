@@ -20,7 +20,7 @@ canal_de_notificacao:
 regras:
   - id: FL-ERRO-LLM
     nome: "FeedbackLoop: provedor de IA falhando"
-    status: a_configurar   # trocar para "configurado" quando a regra existir no Grafana
+    status: configurado    # criada no Grafana e disparada de verdade em 2026-10-19 (docs/observabilidade/simulado-de-alerta-2026-10-19.md)
     prioridade: P2
     ambientes: [dev, prod]
     metrica_essencial: erro

@@ -24,7 +24,7 @@ Resultado final: as 3 chaves distintas por ambiente, a antiga revogada. O desvio
 
 | Hora | Ambiente | Tipo | O que foi feito | Resultado |
 |---|---|---|---|---|
-| a preencher | dev | Emergência **simulada** | Chave do dev trocada por um valor inválido para disparar o alerta `FL-ERRO-LLM`; depois, chave nova criada e instalada conforme a seção 6 do procedimento | a preencher (alerta disparou? e-mail recebido? recuperação confirmada com o botão de teste?) |
+| 09:42 a 10:06 | dev | Emergência **simulada** | 09:42: chave do dev trocada por valor inválido para disparar o alerta `FL-ERRO-LLM`. 10:01: chave nova `feedbackloop-dev-2026-10b` criada e instalada, conforme a seção 6 do procedimento | O alerta disparou (e-mail às 09:48, caiu em spam) e se resolveu às 09:53; recuperação confirmada às 10:06:00 com o botão "Testar conexão". Detalhes: [simulado](../observabilidade/simulado-de-alerta-2026-10-19.md) |
 
 ## Rotações de outros segredos nesta etapa
 
