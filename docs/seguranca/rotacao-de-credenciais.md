@@ -28,11 +28,11 @@ Variáveis que **não** são segredo e podem aparecer em documentos: `APP_URL`, 
 Pré-requisito: acesso ao painel da OpenAI (Settings → API keys), ao Render e ao `.env` local.
 
 1. **Criar** a nova chave do ambiente, com nome datado (ex.: `feedbackloop-dev-2026-10`). Copiar na hora (só aparece uma vez).
-2. **Trocar no ambiente de desenvolvimento primeiro:** Render → `feedbackloop-dev` → Environment → editar `OPENAI_API_KEY` → *Save, rebuild, and deploy*.
-3. **Verificar o dev:** o health check responde `200` (`/_stcore/health`) **e** uma análise de teste com os dados sintéticos termina sem erro de autenticação. Se falhar, a chave antiga continua válida: corrija e repita, sem pressa.
-4. **Trocar em produção** repetindo 2 e 3 em `feedbackloop-prod`, com a chave `-prod-`.
+2. **Trocar no ambiente de desenvolvimento primeiro:** Render → `feedbackloop-dev` → Environment → editar `OPENAI_API_KEY` → **Save, rebuild, and deploy**. Atenção: *Save changes* sozinho só grava o valor; a instância em execução continua com o antigo até um novo deploy (foi a causa do incidente de [19/10/2026](../post-mortem-2026-10-19-rotacao-de-chave.md)).
+3. **Verificar o dev, na instância em execução:** abrir o app do ambiente e clicar em **"Testar conexão com o provedor"** na barra lateral (uma chamada mínima). Tem que aparecer "a chave deste ambiente é válida". Se falhar, a chave antiga continua válida: corrija e repita, sem pressa.
+4. **Trocar em produção** repetindo 2 e 3 em `feedbackloop-prod`, com a chave `-prod-`. **Não revogue nada antes de os dois ambientes passarem no teste de conexão.**
 5. **Atualizar o `.env` local** com a chave `-local-` (arquivo ignorado pelo Git; `git check-ignore -v .env` confirma).
-6. **Revogar a chave antiga** no painel da OpenAI (Revoke), só depois que dev e prod passaram na verificação.
+6. **Revogar a chave antiga** no painel da OpenAI (Revoke), **só depois** que dev e prod passaram no teste de conexão (passos 3 e 4).
 7. **Confirmar que a antiga morreu:** uma chamada com a chave revogada deve devolver `401`. Não é preciso guardar a chave para isso; o painel mostra a data de último uso e o status "revogada".
 8. **Registrar** em [`registro-de-rotacoes.md`](registro-de-rotacoes.md).
 
