@@ -2,7 +2,7 @@
 #
 # A regra de negócio fica aqui dentro; o app.py só cuida da UI.
 
-__version__ = "0.4.0"
+__version__ = "1.0.0"
 
 from .pii import sanitizar, sanitizar_lote  # noqa: E402
 from .pipeline import (  # noqa: E402

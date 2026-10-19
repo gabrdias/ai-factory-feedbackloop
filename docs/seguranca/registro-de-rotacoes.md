@@ -31,7 +31,7 @@ Resultado final: as 3 chaves distintas por ambiente, a antiga revogada. O desvio
 | Segredo | Situação |
 |---|---|
 | `GRAFANA_TOKEN` (dev) | Criado em 2026-10-19 (hora não registrada) e instalado no Render; primeira métrica recebida às 09:09:27 |
-| `GRAFANA_TOKEN` (prod) | Pendente (o prod ainda roda a versão sem telemetria; entra com a release v0.4.0) |
+| `GRAFANA_TOKEN` (prod) | Pendente (o prod ainda roda a versão sem telemetria; entra com a release v1.0.0) |
 | `RENDER_DEPLOY_HOOK` | Não rotacionado nesta etapa (próxima rotação planejada abaixo) |
 
 ## Próxima rotação planejada
