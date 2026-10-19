@@ -520,6 +520,8 @@
         "defaults": {
           "unit": "s",
           "custom": {
+            "drawStyle": "line",
+            "barAlignment": 0,
             "spanNulls": true,
             "lineWidth": 2,
             "fillOpacity": 5,
@@ -573,9 +575,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -626,9 +630,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -679,9 +685,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -732,9 +740,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -785,6 +795,8 @@
         "defaults": {
           "unit": "currencyUSD",
           "custom": {
+            "drawStyle": "line",
+            "barAlignment": 0,
             "spanNulls": true,
             "lineWidth": 2,
             "fillOpacity": 5,
@@ -1154,9 +1166,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -1207,9 +1221,11 @@
         "defaults": {
           "unit": "short",
           "custom": {
+            "drawStyle": "bars",
+            "barAlignment": 0,
             "spanNulls": true,
-            "lineWidth": 2,
-            "fillOpacity": 15,
+            "lineWidth": 1,
+            "fillOpacity": 70,
             "stacking": {
               "mode": "normal",
               "group": "A"
@@ -1227,6 +1243,202 @@
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Antes e depois: latência p50 por configuração",
+      "description": "Mesma planilha, configurações diferentes. workers=1 e cache=off é o comportamento sequencial anterior à otimização.",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le, workers, cache) (increase(feedbackloop_analise_duracao_seconds_bucket{ambiente=~\"$ambiente\"}[$__range])))",
+          "instant": true,
+          "legendFormat": "{{workers}} em paralelo, cache {{cache}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "noValue": "sem dados",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 8
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Antes e depois: latência p95 por configuração",
+      "description": "Com poucas análises o p95 é praticamente o máximo observado; ver docs/otimizacao para o método.",
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, workers, cache) (increase(feedbackloop_analise_duracao_seconds_bucket{ambiente=~\"$ambiente\"}[$__range])))",
+          "instant": true,
+          "legendFormat": "{{workers}} em paralelo, cache {{cache}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "noValue": "sem dados",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Antes e depois: quantas análises em cada configuração",
+      "description": "n de cada configuração. Compare só configurações com n parecido; a primeira análise depois de cada reinício serve de aquecimento.",
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (workers, cache) (increase(feedbackloop_analise_duracao_seconds_count{ambiente=~\"$ambiente\"}[$__range]))",
+          "instant": true,
+          "legendFormat": "{{workers}} em paralelo, cache {{cache}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "sem dados",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         }
       }
     }

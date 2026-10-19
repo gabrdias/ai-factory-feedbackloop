@@ -297,7 +297,8 @@ def analisar(
             except AnaliseFalhouError as exc:
                 raiz.set_status(Status(StatusCode.ERROR, exc.tipo_erro))
                 _registrar_metricas_da_analise(
-                    "erro", time.perf_counter() - inicio, len(respostas_limpas), 0, 0.0, Counter()
+                    "erro", time.perf_counter() - inicio, len(respostas_limpas), 0, 0.0, Counter(),
+                    max_workers, cache is not None,
                 )
                 raise
             raiz.set_attribute("feedbackloop.resultado", "parcial" if resultado.avisos else "ok")
@@ -356,7 +357,7 @@ def _analisar(cliente, respostas_limpas, top_n, max_workers, cache, modelo, sani
     duracao = time.perf_counter() - inicio
     _registrar_metricas_da_analise(
         "parcial" if avisos else "ok", duracao, total, nao_classificadas,
-        (temas_distintos / total) if total else 0.0, entidades,
+        (temas_distintos / total) if total else 0.0, entidades, max_workers, cache is not None,
     )
 
     metricas = {
@@ -389,10 +390,13 @@ def _analisar(cliente, respostas_limpas, top_n, max_workers, cache, modelo, sani
     )
 
 
-def _registrar_metricas_da_analise(resultado, duracao, total, nao_classificadas, fragmentacao, entidades):
+def _registrar_metricas_da_analise(resultado, duracao, total, nao_classificadas, fragmentacao, entidades,
+                                   workers, cache_ligado):
     i = obs.inst()
     base = obs.attrs(resultado=resultado)
-    i.analise_duracao.record(duracao, base)
+    # `workers` e `cache` só rotulam a DURAÇÃO (poucos valores): é o que separa o antes e o depois
+    # no dashboard. Os contadores ficam sem esses rótulos para o ponto zero de partida funcionar.
+    i.analise_duracao.record(duracao, {**base, "workers": str(workers), "cache": "on" if cache_ligado else "off"})
     i.analises.add(1, base)
     i.respostas.add(total, obs.attrs())
     if total:

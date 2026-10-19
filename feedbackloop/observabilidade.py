@@ -35,7 +35,9 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 NOME_DO_SERVICO = "feedbackloop"
 
-_BUCKETS_ANALISE_S = (0.5, 1, 2, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180)
+# 1 s de resolução onde a análise otimizada opera (3 a 10 s) e 10 s onde a sequencial operava (40 a 90 s):
+# o percentil de um histograma é interpolado dentro do bucket, então bucket largo = número impreciso.
+_BUCKETS_ANALISE_S = (0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 120, 180)
 _BUCKETS_LLM_S = (0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 20, 30)
 _BUCKETS_RAZAO = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 

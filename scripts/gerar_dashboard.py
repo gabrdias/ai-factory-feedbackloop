@@ -52,17 +52,18 @@ def razao(numerador: str, denominador: str) -> str:
     return f"(({numerador}) or vector(0)) / ({denominador})"
 
 
-def stat(pid, titulo, expr, x, y, w, unidade="short", limiares=None, casas=None, descricao=""):
+def stat(pid, titulo, expr, x, y, w, unidade="short", limiares=None, casas=None, descricao="",
+         legenda="", h=4, texto="value"):
     return {
         "id": pid, "type": "stat", "title": titulo, "description": descricao,
-        "gridPos": {"x": x, "y": y, "w": w, "h": 4}, "datasource": DS,
-        "targets": [{"refId": "A", "datasource": DS, "expr": expr, "instant": True, "legendFormat": ""}],
+        "gridPos": {"x": x, "y": y, "w": w, "h": h}, "datasource": DS,
+        "targets": [{"refId": "A", "datasource": DS, "expr": expr, "instant": True, "legendFormat": legenda}],
         "fieldConfig": {"defaults": {
             "unit": unidade, "decimals": casas, "noValue": "sem dados",
             "thresholds": {"mode": "absolute", "steps": limiares or [{"color": "blue", "value": None}]},
             "color": {"mode": "thresholds"},
         }, "overrides": []},
-        "options": {"colorMode": "background", "graphMode": "none", "textMode": "value",
+        "options": {"colorMode": "background", "graphMode": "none", "textMode": texto,
                     "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}},
     }
 
@@ -74,7 +75,8 @@ def serie(pid, titulo, consultas, x, y, w, unidade="short", h=8, descricao="", e
         "targets": [{"refId": chr(65 + i), "datasource": DS, "expr": e, "legendFormat": leg}
                     for i, (e, leg) in enumerate(consultas)],
         "fieldConfig": {"defaults": {"unit": unidade, "custom": {
-            "spanNulls": True, "lineWidth": 2, "fillOpacity": 15 if empilhado else 5,
+            "drawStyle": "bars" if empilhado else "line", "barAlignment": 0,
+            "spanNulls": True, "lineWidth": 1 if empilhado else 2, "fillOpacity": 70 if empilhado else 5,
             "stacking": {"mode": "normal" if empilhado else "none", "group": "A"},
             "showPoints": "auto"}}, "overrides": []},
         "options": {"legend": {"displayMode": "list", "placement": "bottom"},
@@ -161,6 +163,22 @@ def gerar() -> dict:
         serie(20, "Cache: acertos e erros",
               [(f"sum by (resultado) (increase(feedbackloop_cache_consultas_total{A}[{RI}]))", "{{resultado}}")],
               12, 27, 12, empilhado=True),
+        # --- linha 5: antes e depois (otimização), separado por configuração ------------------
+        stat(21, "Antes e depois: latência p50 por configuração",
+             f"histogram_quantile(0.5, sum by (le, workers, cache) (increase(feedbackloop_analise_duracao_seconds_bucket{A}[{R}])))",
+             0, 35, 12, "s", passos(8, 15), 1,
+             "Mesma planilha, configurações diferentes. workers=1 e cache=off é o comportamento sequencial anterior à otimização.",
+             legenda="{{workers}} em paralelo, cache {{cache}}", h=6, texto="value_and_name"),
+        stat(22, "Antes e depois: latência p95 por configuração",
+             f"histogram_quantile(0.95, sum by (le, workers, cache) (increase(feedbackloop_analise_duracao_seconds_bucket{A}[{R}])))",
+             12, 35, 12, "s", passos(20, 30), 1,
+             "Com poucas análises o p95 é praticamente o máximo observado; ver docs/otimizacao para o método.",
+             legenda="{{workers}} em paralelo, cache {{cache}}", h=6, texto="value_and_name"),
+        stat(23, "Antes e depois: quantas análises em cada configuração",
+             f"sum by (workers, cache) (increase(feedbackloop_analise_duracao_seconds_count{A}[{R}]))",
+             0, 41, 24, "short", None, 0,
+             "n de cada configuração. Compare só configurações com n parecido; a primeira análise depois de cada reinício serve de aquecimento.",
+             legenda="{{workers}} em paralelo, cache {{cache}}", h=4, texto="value_and_name"),
     ]
 
     return {
