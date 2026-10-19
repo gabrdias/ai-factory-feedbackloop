@@ -74,7 +74,7 @@ Medido nestas execuções (distribuição de sentimento positivo/neutro/negativo
 
 * **O LLM não é 100% determinístico, mesmo com temperatura 0.** A lista de temas também muda levemente entre execuções do **mesmo** cenário A (por exemplo "Home office", "Clima organizacional" e "Burocracia" disputam a última vaga). Ou seja, existe uma variação de base que não vem da otimização.
 * **O que isso permite afirmar:** não há sinal de degradação sistemática de qualidade; a diferença de B em 1 de 5 execuções é do tamanho da variação já vista entre execuções A.
-* **O que isso NÃO permite afirmar:** concordância resposta a resposta entre antes e depois. Isso precisa do benchmark local (`scripts/benchmark.py`, cenário A repetido contra si mesmo como linha de base). **Esta medição ainda não foi feita**, e por isso este relatório não cita percentual de concordância.
+* **Concordância resposta a resposta:** não saía destas execuções pela interface; foi medida na replicação local da seção 4.5 (sentimento 100%, tema 95,0% contra o baseline, e 96,5% quando o cenário A é comparado com ele mesmo).
 
 ### 4.4 Conferência com o dashboard do Grafana (fonte independente)
 
@@ -89,6 +89,34 @@ Captura dos painéis "Antes e depois" ([imagem](../observabilidade/evidencias/da
 * **As contagens batem exatamente** (5, 8 e 8): o dashboard viu as mesmas execuções que o coletor, e a primeira de cada configuração foi realmente descartada nos dois.
 * **Os percentis diferem porque o Grafana interpola dentro das faixas (buckets) do histograma, e dá para reproduzir o número exato:** no cenário A, 2 execuções ficam na faixa 20 a 30 s (27.9 e 29.3) e 3 na faixa 30 a 40 s (32.3, 33.6 e 36.4). O p50 interpolado é 30 + 10 × (2,5 − 2) / 3 = **31.7 s** e o p95 é 30 + 10 × (4,75 − 2) / 3 = **39.2 s**, exatamente o que o painel mostra. A faixa larga faz o painel superestimar a cauda (39.2 s contra o máximo real de 36.4 s); **a tabela 4.1 é a fonte dos números citados**, e o painel confirma contagens e ordem de grandeza.
 * **O painel "8 em paralelo, cache on" mistura reanálises quentes (≈ 2,7 s) com execuções frias (≈ 7 a 9 s, do controle Cf)**, e por isso mostra p50 = 3.5 s e p95 = 8.7 s. Ele **não** representa o cache quente sozinho; o número do cache quente é o da tabela 4.1 (p50 = 2.7 s, n = 5). Em produção o painel terá a mesma mistura, proporcional à taxa de reanálise: é assim que ele deve ser lido.
+
+### 4.5 Replicação local com `scripts/benchmark.py` (outra máquina, outra rede, com concordância por resposta)
+
+Para não depender de uma única medição, repeti o experimento no computador do autor, com chamadas reais, pelo script versionado (`python scripts/benchmark.py --repeticoes 5`, commit `e896f9a`, 19/10/2026). Dados brutos: [`benchmark-real.json`](../benchmarks/benchmark-real.json). Aqui **as 5 execuções de cada cenário entram** (o script não descarta a primeira nos cenários A e B; o cache do cenário C é aquecido por uma execução à parte).
+
+| Cenário | n | p50 (s) | p95 (s) | média (s) | Redução do p50 | Chamadas | Custo por análise (US$)* |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A. 1 em paralelo, sem cache | 5 | 30.4 | 33.4 | 30.8 | (referência) | 37 | 0.0088 |
+| B. 8 em paralelo, sem cache | 5 | 6.1 | 6.5 | 6.1 | **80,0%** | 37 | 0.0088 |
+| C. 8 em paralelo, cache quente | 5 | 2.8 | 3.0 | 2.8 | **90,8%** | 1 | 0.0017 |
+
+\* O script não calcula custo sem as variáveis `LLM_PRECO_*` no `.env` local (saiu `n/d`). Os valores acima foram calculados por mim a partir dos tokens medidos (média de 6372 de entrada e 890 de saída no cenário A) com US$ 0,75 e US$ 4,50 por milhão de tokens.
+
+As duas medições independentes concordam: p50 de **32.3 s → 6.8 s → 2.7 s** no dev e **30.4 s → 6.1 s → 2.8 s** localmente, com reduções de 79% e 80% (concorrência) e de 92% e 91% (cache quente). O resultado local é um pouco mais rápido que o do dev, como esperado (o dev roda no plano gratuito do Render).
+
+**Concordância resposta a resposta com o baseline** (a 1ª execução do cenário A; as classificações são comparadas uma a uma nas 36 respostas):
+
+| Comparação | Sentimento | Tema |
+|---|---:|---:|
+| A contra A (execuções 2 a 5; **variação natural do LLM**) | 100% em todas | 96,5% (94,4%, 97,2%, 94,4%, 100%) |
+| B contra o baseline (execuções 1 a 5) | 100% em todas | 95,0% (mín. 91,7%) |
+| C contra o baseline | 97,2% | 97,2% |
+
+Leitura honesta:
+
+* **Sentimento: nenhuma diferença** entre sequencial e concorrente em 5 de 5 execuções. A única divergência de sentimento (1 resposta em 36, 97,2%) está no cenário C, e vem do cache: ele foi preenchido por uma execução que já divergia do baseline nessa resposta e depois devolve sempre o mesmo resultado (as 5 reanálises são idênticas entre si).
+* **Tema:** o tema é texto livre do LLM e a comparação é por igualdade exata, então sinônimos ("Home office" e "Trabalho remoto") contam como discordância. Mesmo A contra A diverge em 0 a 2 respostas de 36. B diverge em 1 a 3 de 36 (média 1,8) contra 0 a 2 (média 1,25) de A contra A. **A diferença de 1,5 ponto percentual entre B e A contra A é do tamanho da variação entre execuções com n = 5; não dá para afirmar nem descartar um efeito pequeno.** O mecanismo não sugere causa: a concorrência não altera o prompt nem a temperatura, só a ordem em que as respostas chegam.
+* O baseline é uma execução do próprio LLM, **não uma verdade rotulada por pessoas**. Isto mede **consistência**, não **correção** dos temas e sentimentos.
 
 ## 5. Trade-offs (o que se paga por esse ganho)
 
@@ -112,15 +140,17 @@ Captura dos painéis "Antes e depois" ([imagem](../observabilidade/evidencias/da
 * **Antes:** p50 = 32.3 s (p95 = 36.4 s, acima do limite de 30 s), 37 chamadas, ≈ US$ 0,0087 por análise.
 * **Depois (concorrência):** p50 = 6.8 s (**−79%**), mesmas 37 chamadas, mesmo custo.
 * **Depois (concorrência + cache quente):** p50 = 2.7 s (**−92%**), 1 chamada, ≈ US$ 0,0015 (**−83%**), válido só para reanálise.
-* Qualidade: sem sinal de degradação nas métricas agregadas; concordância resposta a resposta **ainda não medida** (próximo passo, abaixo).
+* Replicação local independente: 30.4 s → 6.1 s (−80%) → 2.8 s (−91%).
+* Qualidade: sentimento idêntico ao baseline em todas as execuções concorrentes; tema 95,0% de concordância contra 96,5% de A contra A (variação natural do LLM; diferença dentro do ruído com n = 5).
 
 ## 8. Como reproduzir
 
 1. Medição pela interface (a mesma deste relatório): abra o app, barra lateral → "Avançado: medir otimizações", escolha as chamadas em paralelo e o cache, cole `scripts/coletor_medicoes_navegador.js` no console e rode `await window.__medir(6, 'rótulo')`. Descarte a 1ª execução.
-2. Medição sem navegador, com concordância entre configurações: `python scripts/benchmark.py --repeticoes 5 --saida docs/benchmarks/benchmark-real.json` (precisa da sua `OPENAI_API_KEY` no `.env` local); `python scripts/benchmark.py --simulado` roda sem chave, **apenas para testar o código** (sem latência real, não serve como medição).
+2. Medição sem navegador, com concordância entre configurações (feita na seção 4.5): `python scripts/benchmark.py --repeticoes 5 --saida docs/benchmarks/benchmark-real.json` (precisa da sua `OPENAI_API_KEY` no `.env` local; `python scripts/relatorio_benchmark.py docs/benchmarks/benchmark-real.json` gera as tabelas); `python scripts/benchmark.py --simulado` roda sem chave, **apenas para testar o código** (sem latência real, não serve como medição).
 3. Recalcular as tabelas: `python scripts/consolidar_medicoes_dev.py`.
 
 ## 9. Próximos passos
 
-* Rodar o benchmark local com linha de base A contra A para medir a concordância resposta a resposta e acrescentar o resultado aqui.
-* Experimento futuro com avaliação própria de qualidade: agrupar respostas por chamada (*batch prompting*) e taxonomia fixa de temas (reduz a fragmentação de temas).
+* Avaliação de qualidade **contra rótulos humanos** (hoje só se mede consistência entre execuções do próprio LLM).
+* Teste de carga com vários usuários simultâneos para medir a taxa de limite (429), que não foi exercitada.
+* Experimento futuro: agrupar respostas por chamada (*batch prompting*) e taxonomia fixa de temas (reduz a fragmentação de temas e a discordância por sinônimo).

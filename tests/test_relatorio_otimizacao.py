@@ -39,3 +39,19 @@ def test_primeira_execucao_de_cada_cenario_e_descartada():
     assert res["A"]["duracao"]["n"] == 5 and res["B"]["duracao"]["n"] == 5 and res["C"]["duracao"]["n"] == 5
     # o outlier frio (17,5 s) é o aquecimento do cenário C e não pode contaminar o máximo
     assert res["C"]["duracao"]["max"] < 5
+
+
+def test_replicacao_local_do_relatorio_bate_com_o_benchmark_real():
+    import json
+    from statistics import mean
+
+    dados = json.loads((RAIZ / "docs" / "benchmarks" / "benchmark-real.json").read_text(encoding="utf-8"))["cenarios"]
+    a = dados["A_sequencial_sem_cache"]
+    p50_a = a["resumo"]["p50_s"]
+    for nome in ("B_concorrente_sem_cache", "C_concorrente_com_cache_quente"):
+        p50 = dados[nome]["resumo"]["p50_s"]
+        assert f"{(1 - p50 / p50_a) * 100:.1f}%".replace(".", ",") in RELATORIO
+    a_contra_a = [e["concordancia_tema_vs_baseline"] for e in a["execucoes"][1:]]
+    b = [e["concordancia_tema_vs_baseline"] for e in dados["B_concorrente_sem_cache"]["execucoes"]]
+    assert f"{mean(a_contra_a) * 100:.1f}%".replace(".", ",") in RELATORIO
+    assert f"{mean(b) * 100:.1f}%".replace(".", ",") in RELATORIO

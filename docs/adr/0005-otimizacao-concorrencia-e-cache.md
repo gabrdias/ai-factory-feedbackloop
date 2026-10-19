@@ -43,7 +43,7 @@ Números (medidos no dev em 19/10/2026, n = 5 por cenário, detalhes e limitaç�
 | Depois (8 em paralelo) | 6,8 s (−79%) | 37 | US$ 0,0087 |
 | Depois + cache quente (reanálise) | 2,7 s (−92%) | 1 | US$ 0,0015 |
 
-A concordância resposta a resposta entre configurações ainda não foi medida; ver o relatório.
+Replicação local independente: p50 de 30,4 s → 6,1 s → 2,8 s. Qualidade medida contra o baseline (consistência, não correção): sentimento idêntico em todas as execuções concorrentes; tema 95,0% (A contra A: 96,5%), diferença dentro do ruído do LLM.
 
 ### Consequências positivas
 
@@ -57,7 +57,7 @@ A concordância resposta a resposta entre configurações ainda não foi medida;
 * **O cache só ajuda quando a mesma resposta se repete.** Numa pesquisa nova, 100% de erros de cache: o ganho vem da concorrência. O ganho do cache existe para o caso documentado de reanálise (mesma planilha, mesma configuração).
 * **O disco do Render gratuito é efêmero e o serviço dorme**: o cache some a cada deploy ou reinício. Em produção real o acerto será menor do que no benchmark. Subir de plano (disco persistente) ou usar um armazenamento externo resolveria, ao custo de mais superfície de LGPD.
 * **Custo de qualidade nulo, mas só para a mesma entrada:** como o cache é por texto mascarado, duas respostas diferentes que mascaram para o mesmo texto (por exemplo, só mudou o nome da pessoa) compartilham a classificação. Aceito: o nome mascarado não deveria mudar o tema.
-* A temperatura 0 dá resultado praticamente determinístico, mas o LLM não é 100% determinístico; a verificação de concordância entre configurações (no benchmark) mede isso em vez de supor.
+* A temperatura 0 dá resultado praticamente determinístico, mas o LLM não é 100% determinístico; a concordância entre configurações, medida no benchmark, mostra isso em vez de supor: A contra A já diverge em 3,5% dos temas.
 
 ## Prós e contras das opções descartadas
 
