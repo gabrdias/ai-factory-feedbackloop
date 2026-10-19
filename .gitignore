@@ -13,6 +13,7 @@ dist/
 
 # Virtualenv
 .venv/
+.venv*/
 venv/
 env/
 ENV/
@@ -27,10 +28,24 @@ ENV/
 # Streamlit
 .streamlit/secrets.toml
 
-# Saídas locais de análise (quando a gente finalmente implementar persistência)
+# Saídas locais de análise
 exports/
 *.xlsx
 
-# Env
+# Segredos e configuração local — o trio sagrado: .env (ignorado), .env.example (versionado), este arquivo
 .env
 .env.local
+.env.*
+!.env.example
+
+# Dados gerados em tempo de execução (cache com hash de respostas, bancos locais, logs)
+.cache/
+*.sqlite3
+*.db
+logs/
+*.log
+
+# Credenciais que nunca devem entrar no repositório
+*.pem
+*.key
+credentials*.json
