@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "descricao": "Medições feitas pela interface do ambiente DEV (Render, plano gratuito), com os controles 'Avançado: medir otimizações' da barra lateral, usando scripts/coletor_medicoes_navegador.js.",
+    "data": "2026-10-19",
+    "commit_em_execucao": "0c99d43",
+    "modelo": "gpt-5.4-mini",
+    "respostas": 36,
+    "preco_usd_por_mtok": {"entrada": 0.75, "saida": 4.50},
+    "campos": "d = Duração do pipeline medida pelo app (s); p = relógio do clique até o resultado na tela (s); c = chamadas ao LLM; ti/to = tokens de entrada/saída; cu = custo estimado (US$); s = distribuição de sentimento positivo/neutro/negativo; t = principais temas",
+    "protocolo": "A 1ª execução de cada configuração é aquecimento e não entra nas estatísticas (a primeira análise após cada reinício, ou com série nova, não é contada pelos percentis do dashboard). Cenários A, B e C: 6 execuções, 5 medidas. Controles Bc e Cf: 3 execuções, todas medidas.",
+    "ressalvas": [
+      "Na execução C#2 os campos chamadas/tokens/custo foram lidos antes de a tela terminar de atualizar (null). A Duração é conferida contra o relógio de parede. Coletor corrigido (relê até estabilizar) e usado em Bc e Cf.",
+      "O relógio de parede (p) inclui renderização e deveria ser >= d; só A#3 viola (32,4 < 33,6), sem efeito na mediana. O relatório usa d (fonte primária: o app).",
+      "A execução C#1 (17,5 s, cache vazio sendo preenchido) foi um desvio isolado que não se repetiu em 3 execuções frias seguintes (Cf: 7,0 / 7,3 / 8,8 s). Mantida nos dados, sem explicação comprovada."
+    ]
+  },
+  "cenarios": {
+    "A": {
+      "rotulo": "A: 1 em paralelo, sem cache (comportamento da Etapa 1)",
+      "workers": 1, "cache": false, "aquecimento": 1,
+      "execucoes": [
+        {"i": 1, "d": 36.4, "p": 42.8, "c": 37, "ti": 6372, "to": 866, "cu": 0.0087, "h": "2026-10-19T13:11:51Z", "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 2, "d": 36.4, "p": 36.8, "c": 37, "ti": 6372, "to": 866, "cu": 0.0087, "h": "2026-10-19T13:12:28Z", "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 3, "d": 33.6, "p": 32.4, "c": 37, "ti": 6372, "to": 887, "cu": 0.0088, "h": "2026-10-19T13:13:02Z", "s": "12/1/23", "t": "Carga de trabalho: 3 Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 4, "d": 32.3, "p": 33.4, "c": 37, "ti": 6372, "to": 853, "cu": 0.0086, "h": "2026-10-19T13:13:36Z", "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 5, "d": 29.3, "p": 30.0, "c": 37, "ti": 6372, "to": 916, "cu": 0.0089, "h": "2026-10-19T13:14:07Z", "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 6, "d": 27.9, "p": 29.3, "c": 37, "ti": 6372, "to": 841, "cu": 0.0086, "h": "2026-10-19T13:14:37Z", "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"}
+      ]
+    },
+    "B": {
+      "rotulo": "B: 8 em paralelo, sem cache (concorrência)",
+      "workers": 8, "cache": false, "aquecimento": 1,
+      "execucoes": [
+        {"i": 1, "d": 7.2, "p": 8.6, "c": 37, "ti": 6374, "to": 869, "cu": 0.0087, "s": "13/0/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Burocracia: 1"},
+        {"i": 2, "d": 7.2, "p": 7.3, "c": 37, "ti": 6374, "to": 869, "cu": 0.0087, "s": "13/0/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Burocracia: 1"},
+        {"i": 3, "d": 6.5, "p": 7.7, "c": 37, "ti": 6372, "to": 881, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 4, "d": 6.8, "p": 7.9, "c": 37, "ti": 6372, "to": 877, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 5, "d": 6.8, "p": 7.1, "c": 37, "ti": 6372, "to": 881, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 6, "d": 6.7, "p": 7.6, "c": 37, "ti": 6372, "to": 882, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"}
+      ]
+    },
+    "C": {
+      "rotulo": "C: 8 em paralelo, cache ligado (1ª execução enche o cache; as demais são reanálises da mesma planilha)",
+      "workers": 8, "cache": true, "aquecimento": 1,
+      "execucoes": [
+        {"i": 1, "d": 17.5, "p": 18.9, "c": 37, "ti": 6372, "to": 881, "cu": 0.0087, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 2, "d": 2.7, "p": 3.9, "c": null, "ti": null, "to": null, "cu": null, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 3, "d": 2.7, "p": 3.9, "c": 1, "ti": 199, "to": 336, "cu": 0.0017, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 4, "d": 2.6, "p": 3.3, "c": 1, "ti": 199, "to": 307, "cu": 0.0015, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 5, "d": 3.0, "p": 4.2, "c": 1, "ti": 199, "to": 307, "cu": 0.0015, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 6, "d": 3.0, "p": 4.2, "c": 1, "ti": 199, "to": 310, "cu": 0.0015, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"}
+      ]
+    },
+    "Bc": {
+      "rotulo": "Bc: controle posterior do B (8 em paralelo, sem cache), para descartar lentidão do provedor",
+      "workers": 8, "cache": false, "aquecimento": 0,
+      "execucoes": [
+        {"i": 1, "d": 7.1, "p": 9.0, "c": 37, "ti": 6372, "to": 874, "cu": 0.0087, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 2, "d": 6.2, "p": 8.9, "c": 37, "ti": 6372, "to": 861, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 3, "d": 7.7, "p": 10.5, "c": 37, "ti": 6372, "to": 881, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"}
+      ]
+    },
+    "Cf": {
+      "rotulo": "Cf: execução FRIA com cache ligado (cache limpo antes de cada execução), para isolar o custo de gravar no cache",
+      "workers": 8, "cache": true, "aquecimento": 0,
+      "execucoes": [
+        {"i": 1, "d": 7.0, "p": 8.7, "c": 37, "ti": 6372, "to": 864, "cu": 0.0087, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Home office: 2 Burocracia: 1"},
+        {"i": 2, "d": 7.3, "p": 9.7, "c": 37, "ti": 6372, "to": 871, "cu": 0.0087, "s": "12/1/23", "t": "Liderança: 4 Ferramentas: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"},
+        {"i": 3, "d": 8.8, "p": 11.0, "c": 37, "ti": 6372, "to": 871, "cu": 0.0087, "s": "12/1/23", "t": "Ferramentas: 3 Liderança: 3 Reconhecimento: 3 Remuneração: 3 Benefícios: 2 Carga de trabalho: 2 Clima organizacional: 2 Home office: 2"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "data": "2026-10-19",
+  "total_itens": 88,
+  "categorias": {
+    "nome_lexico": {
+      "itens": 14,
+      "itens_sem_falha": 14,
+      "pii": 18,
+      "pii_removidas": 18,
+      "manter": 0,
+      "manter_ok": 0,
+      "marcadores_em_negativos": 0
+    },
+    "nome_gatilho": {
+      "itens": 8,
+      "itens_sem_falha": 8,
+      "pii": 8,
+      "pii_removidas": 8,
+      "manter": 2,
+      "manter_ok": 2,
+      "marcadores_em_negativos": 0
+    },
+    "nome_sobrenome": {
+      "itens": 5,
+      "itens_sem_falha": 5,
+      "pii": 6,
+      "pii_removidas": 6,
+      "manter": 0,
+      "manter_ok": 0,
+      "marcadores_em_negativos": 0
+    },
+    "nome_sem_pista": {
+      "itens": 5,
+      "itens_sem_falha": 0,
+      "pii": 6,
+      "pii_removidas": 0,
+      "manter": 0,
+      "manter_ok": 0,
+      "marcadores_em_negativos": 0
+    },
+    "nome_minusculo": {
+      "itens": 4,
+      "itens_sem_falha": 0,
+      "pii": 4,
+      "pii_removidas": 0,
+      "manter": 0,
+      "manter_ok": 0,
+      "marcadores_em_negativos": 0
+    },
+    "email": {
+      "itens": 5,
+      "itens_sem_falha": 5,
+      "pii": 6,
+      "pii_removidas": 6,
+      "manter": 1,
+      "manter_ok": 1,
+      "marcadores_em_negativos": 0
+    },
+    "cpf": {
+      "itens": 4,
+      "itens_sem_falha": 4,
+      "pii": 4,
+      "pii_removidas": 4,
+      "manter": 1,
+      "manter_ok": 1,
+      "marcadores_em_negativos": 0
+    },
+    "telefone": {
+      "itens": 6,
+      "itens_sem_falha": 6,
+      "pii": 6,
+      "pii_removidas": 6,
+      "manter": 2,
+      "manter_ok": 2,
+      "marcadores_em_negativos": 0
+    },
+    "handle": {
+      "itens": 3,
+      "itens_sem_falha": 3,
+      "pii": 3,
+      "pii_removidas": 3,
+      "manter": 1,
+      "manter_ok": 1,
+      "marcadores_em_negativos": 0
+    },
+    "ids": {
+      "itens": 6,
+      "itens_sem_falha": 6,
+      "pii": 6,
+      "pii_removidas": 6,
+      "manter": 1,
+      "manter_ok": 1,
+      "marcadores_em_negativos": 0
+    },
+    "negativo": {
+      "itens": 22,
+      "itens_sem_falha": 22,
+      "pii": 0,
+      "pii_removidas": 0,
+      "manter": 37,
+      "manter_ok": 37,
+      "marcadores_em_negativos": 0
+    },
+    "negativo_ambiguo": {
+      "itens": 2,
+      "itens_sem_falha": 0,
+      "pii": 0,
+      "pii_removidas": 0,
+      "manter": 2,
+      "manter_ok": 0,
+      "marcadores_em_negativos": 2
+    },
+    "misto": {
+      "itens": 4,
+      "itens_sem_falha": 4,
+      "pii": 13,
+      "pii_removidas": 13,
+      "manter": 2,
+      "manter_ok": 2,
+      "marcadores_em_negativos": 0
+    }
+  },
+  "falhas": [
+    {
+      "id": 28,
+      "cat": "nome_sem_pista",
+      "texto": "Ontem a Ozanir me disse que o orçamento foi cortado.",
+      "saida": "Ontem a Ozanir me disse que o orçamento foi cortado.",
+      "vazou": [
+        "Ozanir"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 29,
+      "cat": "nome_sem_pista",
+      "texto": "Cobraram isso do Genivaldo na reunião e ele ficou sem reação.",
+      "saida": "Cobraram isso do Genivaldo na reunião e ele ficou sem reação.",
+      "vazou": [
+        "Genivaldo"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 30,
+      "cat": "nome_sem_pista",
+      "texto": "Quem decide tudo é o Ubiratan, o resto do time só executa.",
+      "saida": "Quem decide tudo é o Ubiratan, o resto do time só executa.",
+      "vazou": [
+        "Ubiratan"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 31,
+      "cat": "nome_sem_pista",
+      "texto": "Zuleide e Eronildes combinaram tudo por fora, sem avisar o time.",
+      "saida": "Zuleide e Eronildes combinaram tudo por fora, sem avisar o time.",
+      "vazou": [
+        "Zuleide",
+        "Eronildes"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 32,
+      "cat": "nome_sem_pista",
+      "texto": "Falei com a Gessica e ela confirmou o atraso.",
+      "saida": "Falei com a Gessica e ela confirmou o atraso.",
+      "vazou": [
+        "Gessica"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 33,
+      "cat": "nome_minusculo",
+      "texto": "o gerente marcos antunes muda tudo toda semana",
+      "saida": "o gerente marcos antunes muda tudo toda semana",
+      "vazou": [
+        "marcos antunes"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 34,
+      "cat": "nome_minusculo",
+      "texto": "falei com a carolina mendes e ela concordou",
+      "saida": "falei com a carolina mendes e ela concordou",
+      "vazou": [
+        "carolina mendes"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 35,
+      "cat": "nome_minusculo",
+      "texto": "joão pereira é o único que escuta o time",
+      "saida": "joão pereira é o único que escuta o time",
+      "vazou": [
+        "joão pereira"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 36,
+      "cat": "nome_minusculo",
+      "texto": "ricardo alves não responde ninguém",
+      "saida": "ricardo alves não responde ninguém",
+      "vazou": [
+        "ricardo alves"
+      ],
+      "perdeu": []
+    },
+    {
+      "id": 83,
+      "cat": "negativo_ambiguo",
+      "texto": "Marcos importantes do projeto foram esquecidos pela liderança.",
+      "saida": "[PESSOA_1] importantes do projeto foram esquecidos pela liderança.",
+      "vazou": [],
+      "perdeu": [
+        "Marcos importantes"
+      ]
+    },
+    {
+      "id": 84,
+      "cat": "negativo_ambiguo",
+      "texto": "Clara demais a diferença de tratamento entre as áreas.",
+      "saida": "[PESSOA_1] demais a diferença de tratamento entre as áreas.",
+      "vazou": [],
+      "perdeu": [
+        "Clara demais"
+      ]
+    }
+  ],
+  "recall_garantidas": 1.0,
+  "recall_geral": 0.875,
+  "preservacao_geral": 0.9592,
+  "preservacao_garantidas": 1.0
+}

@@ -102,7 +102,7 @@ class Instrumentos:
     def __init__(self, meter):
         self.analise_duracao = meter.create_histogram(
             "feedbackloop.analise.duracao", unit="s",
-            description="Duração de uma análise completa (do clique ao resumo)",
+            description="Duração do pipeline de uma análise (classificação, agregação e resumo)",
         )
         self.llm_duracao = meter.create_histogram(
             "feedbackloop.llm.duracao", unit="s", description="Duração de cada chamada ao provedor de LLM",

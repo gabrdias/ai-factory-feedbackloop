@@ -5,7 +5,7 @@
 
 ## Contexto e problema
 
-O pipeline herdado fazia **uma chamada ao LLM por resposta, uma depois da outra**, mais uma para o resumo: 37 chamadas em fila para uma planilha de 36 respostas, o que levava mais de um minuto com a tela travada. Além disso, **reanalisar a mesma planilha pagava tudo de novo** (a dívida nº 3 do protótipo: "sem cache, reanalisa tudo toda vez"). O orçamento do piloto é de US$ 120/mês, a hospedagem é o plano gratuito do Render (disco efêmero, dorme sem uso) e **qualquer coisa que persista dado é superfície de LGPD**.
+O pipeline herdado fazia **uma chamada ao LLM por resposta, uma depois da outra**, mais uma para o resumo: 37 chamadas em fila para uma planilha de 36 respostas, o que levou p50 = 32,3 s (p95 = 36,4 s, acima do limite de 30 s) com a tela parada. Além disso, **reanalisar a mesma planilha pagava tudo de novo** (a dívida nº 3 do protótipo: "sem cache, reanalisa tudo toda vez"). O orçamento do piloto é de US$ 120/mês, a hospedagem é o plano gratuito do Render (disco efêmero, dorme sem uso) e **qualquer coisa que persista dado é superfície de LGPD**.
 
 Era preciso decidir **qual otimização** atacar, sabendo que a Etapa 2 exige número antes e depois e uma discussão honesta do trade-off entre latência, custo e qualidade.
 
@@ -35,7 +35,15 @@ Opção escolhida: **pool de threads para as classificações** (`max_workers`, 
 * A chave inclui a **versão do prompt** e o **modelo**: mudar qualquer um invalida o cache em vez de servir classificação antiga.
 * Falha de uma resposta **não derruba a análise**: ela vira "Não classificado" e a análise segue com aviso; só se **todas** falharem o app mostra erro (mensagem amigável).
 
-Números: ver o [relatório de otimização](../otimizacao/otimizacao-concorrencia-e-cache.md).
+Números (medidos no dev em 19/10/2026, n = 5 por cenário, detalhes e limitações no [relatório de otimização](../otimizacao/otimizacao-concorrencia-e-cache.md)):
+
+| | p50 | Chamadas | Custo por análise |
+|---|---:|---:|---:|
+| Antes (1 em paralelo, sem cache) | 32,3 s | 37 | US$ 0,0087 |
+| Depois (8 em paralelo) | 6,8 s (−79%) | 37 | US$ 0,0087 |
+| Depois + cache quente (reanálise) | 2,7 s (−92%) | 1 | US$ 0,0015 |
+
+A concordância resposta a resposta entre configurações ainda não foi medida; ver o relatório.
 
 ### Consequências positivas
 
