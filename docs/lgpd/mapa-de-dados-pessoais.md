@@ -9,7 +9,8 @@
 | Empresas clientes da FeedbackLoop (RH) | **Controladoras** (art. 5º, VI) | Decidem aplicar a pesquisa de clima, definem a finalidade e enviam as respostas dos seus colaboradores. |
 | FeedbackLoop Tecnologia | **Operadora** (art. 5º, VII) | Trata os dados em nome do cliente, seguindo as instruções dele (art. 39). Também é controladora dos *seus próprios* dados operacionais (telemetria, logs). |
 | OpenAI | **Suboperadora** (processamento fora do Brasil) | Recebe o texto **já mascarado** para classificar. Ver [transferência internacional](transferencia-internacional.md). |
-| Render (hospedagem) e Grafana Labs (telemetria) | Suboperadores de infraestrutura | Hospedam o app e recebem métricas/traces **sem conteúdo de respostas**. |
+| **Render** (hospedagem) | Suboperador de infraestrutura | O app roda lá: o **texto original** das respostas passa pela memória do servidor (antes do mascaramento), em região fora do Brasil a confirmar. Ver [transferência internacional](transferencia-internacional.md), trecho T1. |
+| Grafana Labs (telemetria, região São Paulo) | Suboperador de infraestrutura | Recebe métricas/traces **sem conteúdo de respostas** e sem dado pessoal. |
 
 **Titulares:** (a) colaboradores que respondem à pesquisa; (b) **terceiros citados** no texto livre (gestores, colegas, ex-colegas); (c) pessoas que acessam o app (endereço IP nos logs da plataforma).
 
@@ -54,3 +55,4 @@ Como **operadora**, a FeedbackLoop encaminha ao controlador (o cliente) qualquer
 | P-3 | Região escolhida na stack do Grafana Cloud e retenção real do plano; atualizar P5 | Engenharia |
 | P-4 | Relatório de Impacto (RIPD, art. 38) formal antes do piloto com cliente real | Jurídico / Encarregado |
 | P-5 | Definir o Encarregado (art. 41) e o canal de contato do titular | Diretoria |
+| P-6 | Confirmar a **região do serviço no Render** e o DPA da plataforma; a sanitização acontece dentro do app, então o texto original atravessa a fronteira até o Render (ver [transferência internacional](transferencia-internacional.md), T-1) | Engenharia + Jurídico |
